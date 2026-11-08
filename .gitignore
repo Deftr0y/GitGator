@@ -45,3 +45,12 @@ SourceGit.app/
 build.command
 src/Properties/launchSettings.json
 *.lscache
+
+# GitGator local SDK, output and credentials
+.dotnet/
+.nuget/
+artifacts/
+work/
+.env
+.env.*
+!.env.example

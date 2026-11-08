@@ -18,6 +18,34 @@ namespace SourceGit.Views
             InitializeComponent();
         }
 
+        private void OpenExternalToolsFromMore(object sender, RoutedEventArgs e)
+        {
+            OpenWithExternalTools(MoreButton, e);
+        }
+
+        private void OpenGitFlowFromMore(object sender, RoutedEventArgs e)
+        {
+            OpenGitFlowMenu(MoreButton, e);
+        }
+
+        private void OpenGitLFSFromMore(object sender, RoutedEventArgs e)
+        {
+            OpenGitLFSMenu(MoreButton, e);
+        }
+
+        private void OpenCustomActionsFromMore(object sender, RoutedEventArgs e)
+        {
+            OpenCustomActionMenu(MoreButton, e);
+        }
+
+        private async void StashFromMore(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.Repository repo)
+                await repo.StashAllAsync(false);
+
+            e.Handled = true;
+        }
+
         private void OpenWithExternalTools(object sender, RoutedEventArgs ev)
         {
             if (sender is Button button && DataContext is ViewModels.Repository repo)

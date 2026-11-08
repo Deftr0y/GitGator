@@ -245,7 +245,7 @@ namespace SourceGit.Models
 
         public static RepositoryUIStates Load(string gitDir)
         {
-            var fileInfo = new FileInfo(Path.Combine(gitDir, "sourcegit.uistates"));
+            var fileInfo = new FileInfo(Path.Combine(gitDir, "gitgator.uistates"));
             var fullpath = fileInfo.FullName;
 
             RepositoryUIStates states;

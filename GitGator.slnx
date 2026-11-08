@@ -1,11 +1,11 @@
 <Solution>
-	<Folder Name="/.github/workflows/">
-		<File Path=".github/workflows/build.yml"/>
-		<File Path=".github/workflows/ci.yml"/>
-		<File Path=".github/workflows/format-check.yml"/>
-		<File Path=".github/workflows/localization-check.yml"/>
-		<File Path=".github/workflows/package.yml"/>
-		<File Path=".github/workflows/release.yml"/>
+	<Folder Name="/docs/upstream/workflows/">
+		<File Path="docs/upstream/workflows/build.yml"/>
+		<File Path="docs/upstream/workflows/ci.yml"/>
+		<File Path="docs/upstream/workflows/format-check.yml"/>
+		<File Path="docs/upstream/workflows/localization-check.yml"/>
+		<File Path="docs/upstream/workflows/package.yml"/>
+		<File Path="docs/upstream/workflows/release.yml"/>
 	</Folder>
 
 	<Folder Name="/build/resources/_common/applications/">
@@ -57,7 +57,7 @@
 	</Folder>
 
 	<Folder Name="/src/">
-		<Project Path="src/SourceGit.csproj" />
+		<Project Path="src/GitGator.csproj" />
 	</Folder>
 
 	<Folder Name="/files/">

@@ -38,13 +38,15 @@
     <StackPanel Orientation="Horizontal">
       <Image Width="200" Height="200"
              Margin="8,0"
-             Source="/App.ico"
+             Source="/Resources/Images/gitgator.png"
              HorizontalAlignment="Center"
              VerticalAlignment="Center"/>
 
       <StackPanel Orientation="Vertical" Margin="4,18,24,18">
         <StackPanel Height="40" Orientation="Horizontal">
-          <TextBlock Classes="bold" Text="SourceGit" FontSize="32" />
+          <TextBlock Classes="bold" FontSize="32">
+            <Run Text="Git"/><Run Text="Gator" Foreground="{StaticResource Brush.BrandOrange}"/>
+          </TextBlock>
           <Border Margin="12,0,0,0" Height="20"
                   CornerRadius="10"
                   Background="{DynamicResource Brush.Accent}"
@@ -61,16 +63,17 @@
         </Border>
 
         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-          <Button Width="18" Height="18" Classes="icon_button" Click="OnVisitWebsite" ToolTip.Tip="https://sourcegit-scm.github.io/">
+          <Button Width="18" Height="18" Classes="icon_button" Click="OnVisitWebsite" ToolTip.Tip="https://github.com/Deftr0y/GitGator">
             <Path Width="16" Height="16" Data="{StaticResource Icons.Remotes}"/>
           </Button>
 
-          <Button Width="18" Height="18" Margin="8,0,0,0" Classes="icon_button" Click="OnVisitSourceCode" ToolTip.Tip="https://github.com/sourcegit-scm/sourcegit">
+          <Button Width="18" Height="18" Margin="8,0,0,0" Classes="icon_button" Click="OnVisitSourceCode" ToolTip.Tip="https://github.com/Deftr0y/GitGator">
             <Path Width="16" Height="16" Data="{StaticResource Icons.GitHub}"/>
           </Button>
         </StackPanel>
 
-        <TextBlock x:Name="TxtReleaseDate" Margin="0,28,0,0" Foreground="{DynamicResource Brush.FG2}"/>
+        <TextBlock Text="Based on SourceGit · MIT licensed" Margin="0,12,0,0"/>
+        <TextBlock x:Name="TxtReleaseDate" Margin="0,8,0,0" Foreground="{DynamicResource Brush.FG2}"/>
         <TextBlock x:Name="TxtCopyright" Margin="0,2,0,0" Foreground="{DynamicResource Brush.FG2}"/>
       </StackPanel>
     </StackPanel>

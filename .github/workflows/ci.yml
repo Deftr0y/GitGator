@@ -1,29 +1,21 @@
-name: Continuous Integration
+name: Ubuntu build
 on:
   push:
-    branches: [develop]
+    branches: [main]
   pull_request:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:
-  workflow_call:
+permissions:
+  contents: read
 jobs:
   build:
-    name: Build
-    uses: ./.github/workflows/build.yml
-  version:
-    name: Prepare version string
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout sources
-        uses: actions/checkout@v6
-      - name: Output version string
-        id: version
-        run: echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
-  package:
-    needs: [build, version]
-    name: Package
-    uses: ./.github/workflows/package.yml
-    with:
-      version: ${{ needs.version.outputs.version }}
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore GitGator.slnx
+      - run: dotnet build GitGator.slnx -c Release -p:DisableAOT=true --no-restore

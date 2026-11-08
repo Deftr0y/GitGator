@@ -8,6 +8,7 @@
              xmlns:c="using:SourceGit.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SourceGit.Views.ChangeCollectionView"
+             FontSize="13"
              x:Name="ThisControl">
   <UserControl.Styles>
     <Style Selector="ListBox">
@@ -22,7 +23,7 @@
     </Style>
 
     <Style Selector="ListBoxItem">
-      <Setter Property="Height" Value="24"/>
+      <Setter Property="Height" Value="22"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="Padding" Value="0"/>
     </Style>
@@ -38,7 +39,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="vm:ChangeTreeNode">
             <StackPanel Orientation="Horizontal"
-                        Height="24"
+                        Height="22"
                         Margin="{Binding Depth, Converter={x:Static c:IntConverters.ToTreeMargin}}"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
@@ -88,7 +89,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="m:Change">
             <StackPanel Orientation="Horizontal"
-                        Height="24"
+                        Height="22"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
                         DataContextChanged="OnRowDataContextChanged">
@@ -123,7 +124,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="m:Change">
             <StackPanel Orientation="Horizontal"
-                        Height="24"
+                        Height="22"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
                         DataContextChanged="OnRowDataContextChanged">

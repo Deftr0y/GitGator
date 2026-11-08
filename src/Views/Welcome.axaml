@@ -17,9 +17,18 @@
     </Grid.ColumnDefinitions>
 
     <!-- Managed Repositories -->
-    <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,*">
+    <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,Auto,*">
+      <!-- App identity -->
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,8,0,16"
+                  HorizontalAlignment="Left" Spacing="12">
+        <Image Width="56" Height="56" Source="/Resources/Images/gitgator.png"/>
+        <TextBlock Classes="bold" FontSize="28" VerticalAlignment="Center">
+          <Run Text="Git"/><Run Text="Gator" Foreground="{StaticResource Brush.BrandOrange}"/>
+        </TextBlock>
+      </StackPanel>
+
       <!-- Search Box -->
-      <TextBox Grid.Row="0"
+      <TextBox Grid.Row="1"
                x:Name="SearchBox"
                Height="32"
                Padding="0"
@@ -59,7 +68,7 @@
       </TextBox>
 
       <!-- Repository Tree -->
-      <v:RepositoryListBox Grid.Row="1"
+      <v:RepositoryListBox Grid.Row="2"
                            x:Name="TreeContainer"
                            Margin="0,8,8,0"
                            Focusable="True"

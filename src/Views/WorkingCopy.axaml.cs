@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -18,18 +20,78 @@ namespace SourceGit.Views
             InitializeComponent();
         }
 
-        private void OnMainLayoutSizeChanged(object sender, SizeChangedEventArgs e)
+        protected override void OnDataContextChanged(EventArgs e)
         {
-            if (sender is not Grid grid)
+            if (_workingCopy != null)
+            {
+                _workingCopy.PropertyChanged -= OnWorkingCopyPropertyChanged;
+                _workingCopy.IsPreviewVisible = false;
+            }
+
+            base.OnDataContextChanged(e);
+            _workingCopy = DataContext as ViewModels.WorkingCopy;
+            if (_workingCopy != null)
+            {
+                _workingCopy.IsPreviewVisible = false;
+                _workingCopy.PropertyChanged += OnWorkingCopyPropertyChanged;
+            }
+
+            UpdatePreviewLayout();
+        }
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+
+            if (_workingCopy != null)
+            {
+                _workingCopy.PropertyChanged -= OnWorkingCopyPropertyChanged;
+                _workingCopy.IsPreviewVisible = false;
+                _workingCopy.PropertyChanged += OnWorkingCopyPropertyChanged;
+            }
+
+            UpdatePreviewLayout();
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            if (_workingCopy != null)
+            {
+                _workingCopy.PropertyChanged -= OnWorkingCopyPropertyChanged;
+                _workingCopy.IsPreviewVisible = false;
+            }
+
+            UpdatePreviewLayout();
+
+            base.OnDetachedFromVisualTree(e);
+        }
+
+        private void OnWorkingCopyPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ViewModels.WorkingCopy.IsPreviewVisible))
+                UpdatePreviewLayout();
+        }
+
+        private void UpdatePreviewLayout()
+        {
+            if (MainLayout == null)
                 return;
 
-            var layout = ViewModels.Preferences.Instance.Layout;
-            var width = grid.Bounds.Width;
-            var leftWidth = Math.Max(width - 304, 300);
-
-            if (layout.WorkingCopyLeftWidth.Value - leftWidth > 1.0)
-                layout.WorkingCopyLeftWidth = new GridLength(leftWidth, GridUnitType.Pixel);
+            var visible = _workingCopy?.IsPreviewVisible == true;
+            MainLayout.ColumnDefinitions[0].Width = new GridLength(1, GridUnitType.Star);
+            MainLayout.ColumnDefinitions[1].Width = new GridLength(visible ? 4 : 0);
+            MainLayout.ColumnDefinitions[2].MinWidth = visible ? 320 : 0;
+            MainLayout.ColumnDefinitions[2].Width = visible ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
         }
+
+        private void OnMainLayoutSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            // Avoid a stale wide preview forcing the file trees outside a smaller window.
+            if (_workingCopy?.IsPreviewVisible == true && MainLayout.Bounds.Width < 760)
+                UpdatePreviewLayout();
+        }
+
+        private ViewModels.WorkingCopy _workingCopy;
 
         private async void OnOpenAssumeUnchanged(object sender, RoutedEventArgs e)
         {

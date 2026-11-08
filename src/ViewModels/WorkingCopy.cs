@@ -75,13 +75,27 @@ namespace SourceGit.ViewModels
         public bool EnableSignOff
         {
             get => _repo.UIStates.EnableSignOffForCommit;
-            set => _repo.UIStates.EnableSignOffForCommit = value;
+            set
+            {
+                if (_repo.UIStates.EnableSignOffForCommit != value)
+                {
+                    _repo.UIStates.EnableSignOffForCommit = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public bool NoVerifyOnCommit
         {
             get => _repo.UIStates.NoVerifyOnCommit;
-            set => _repo.UIStates.NoVerifyOnCommit = value;
+            set
+            {
+                if (_repo.UIStates.NoVerifyOnCommit != value)
+                {
+                    _repo.UIStates.NoVerifyOnCommit = value;
+                    OnPropertyChanged();
+                }
+            }
         }
 
         public bool UseAmend
@@ -233,6 +247,33 @@ namespace SourceGit.ViewModels
             }
         }
 
+        public bool IsPreviewVisible
+        {
+            get => _isPreviewVisible;
+            set
+            {
+                if (SetProperty(ref _isPreviewVisible, value))
+                    UpdateDetail();
+            }
+        }
+
+        public void TogglePreview() => IsPreviewVisible = !IsPreviewVisible;
+
+        public void ShowPreview() => IsPreviewVisible = true;
+
+        public void HidePreview() => IsPreviewVisible = false;
+
+        public void ResolveConflicts()
+        {
+            var conflicts = _unstaged.FindAll(x => x.IsConflicted);
+            if (conflicts.Count == 0)
+                return;
+
+            Filter = string.Empty;
+            SelectedUnstaged = new(new List<Models.Change> { FindFirstConflict(conflicts) });
+            IsPreviewVisible = true;
+        }
+
         public object DetailContext
         {
             get => _detailContext;
@@ -248,6 +289,11 @@ namespace SourceGit.ViewModels
         public WorkingCopy(Repository repo)
         {
             _repo = repo;
+            _repo.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(Repository.IsWorkingCopyVisible) && !_repo.IsWorkingCopyVisible)
+                    IsPreviewVisible = false;
+            };
         }
 
         public void SetData(List<Models.Change> changes)
@@ -785,6 +831,13 @@ namespace SourceGit.ViewModels
 
         private void UpdateDetail()
         {
+            // Selecting or refreshing files should not start a diff while preview is closed.
+            if (!_isPreviewVisible)
+            {
+                DetailContext = null;
+                return;
+            }
+
             if (_selectedUnstaged is { Count: 1, HasFolder: false })
                 SetDetail(_selectedUnstaged.Changes[0], true);
             else if (_selectedStaged is { Count: 1, HasFolder: false })
@@ -885,7 +938,7 @@ namespace SourceGit.ViewModels
 
         private Models.Change FindFirstConflict(List<Models.Change> conflicts)
         {
-            if (conflicts.Count == 1 || Preferences.Instance.ChangeViewMode != Models.ChangeViewMode.Tree)
+            if (conflicts.Count == 1)
                 return conflicts[0];
 
             var finder = (ChangeInTree l, ChangeInTree r) =>
@@ -958,6 +1011,7 @@ namespace SourceGit.ViewModels
         private List<Models.Change> _visibleStaged = [];
         private ChangeSelection _selectedUnstaged = new(null);
         private ChangeSelection _selectedStaged = new(null);
+        private bool _isPreviewVisible = false;
         private object _detailContext = null;
         private string _filter = string.Empty;
         private string _commitMessage = string.Empty;

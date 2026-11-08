@@ -41,7 +41,8 @@
                                   IsVisible="{OnPlatform False, macOS=True}"/>
 
       <!-- Menu (Windows/Linux) -->
-      <Button Grid.Column="0" Classes="icon_button" VerticalAlignment="Bottom" Margin="6,0,0,3" IsVisible="{OnPlatform True, macOS=False}">
+      <Button Grid.Column="0" Classes="icon_button" VerticalAlignment="Bottom" Margin="6,0,0,3" IsVisible="{OnPlatform True, macOS=False}"
+              AutomationProperties.Name="GitGator" ToolTip.Tip="GitGator">
         <Button.Flyout>
           <MenuFlyout Placement="BottomEdgeAlignedLeft" VerticalOffset="-6">
             <MenuItem Header="{DynamicResource Text.Preferences}" Command="{x:Static s:App.OpenPreferencesCommand}" InputGesture="Ctrl+,">
@@ -91,7 +92,7 @@
             </MenuItem>
           </MenuFlyout>
         </Button.Flyout>
-        <Path Width="12" Height="12" Data="{StaticResource Icons.Menu}"/>
+        <Image Width="24" Height="24" Source="/Resources/Images/gitgator.png"/>
       </Button>
 
       <!-- Workspace Dropdown Menu -->

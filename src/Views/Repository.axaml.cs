@@ -88,6 +88,27 @@ namespace SourceGit.Views
             UpdateLeftSidebarLayout();
         }
 
+        private void OnSelectPage(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && DataContext is ViewModels.Repository repo &&
+                int.TryParse(button.Tag?.ToString(), out var page) &&
+                (!repo.IsBare || page == 0))
+                repo.SelectedViewIndex = page;
+
+            e.Handled = true;
+        }
+
+        private void OnNavigateToHead(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.Repository { CurrentBranch: { } head } repo)
+            {
+                LocalBranchTree.Select(head);
+                repo.NavigateToCommit(head.Head);
+            }
+
+            e.Handled = true;
+        }
+
         private async void OnOpenConfigure(object sender, RoutedEventArgs e)
         {
             if (DataContext is ViewModels.Repository repo)
@@ -250,16 +271,16 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.Repository { UIStates: { } } vm)
                 return;
 
-            var leftHeight = LeftSidebarGroups.Bounds.Height - 28.0 * 5 - 4;
+            var leftHeight = LeftSidebarGroups.Bounds.Height - 24.0 * 5 - 4;
             if (leftHeight <= 0)
                 return;
 
             var localBranchRows = vm.IsLocalBranchGroupExpanded ? LocalBranchTree.Rows.Count : 0;
             var remoteBranchRows = vm.IsRemoteGroupExpanded ? RemoteBranchTree.Rows.Count : 0;
-            var desiredBranches = (localBranchRows + remoteBranchRows) * 24.0;
-            var desiredTag = vm.IsTagGroupExpanded ? 24.0 * TagsList.Rows : 0;
-            var desiredSubmodule = vm.IsSubmoduleGroupExpanded ? 24.0 * SubmoduleList.Rows : 0;
-            var desiredWorktree = vm.IsWorktreeGroupExpanded ? 24.0 * vm.Worktrees.Count : 0;
+            var desiredBranches = (localBranchRows + remoteBranchRows) * 22.0;
+            var desiredTag = vm.IsTagGroupExpanded ? 22.0 * TagsList.Rows : 0;
+            var desiredSubmodule = vm.IsSubmoduleGroupExpanded ? 22.0 * SubmoduleList.Rows : 0;
+            var desiredWorktree = vm.IsWorktreeGroupExpanded ? 22.0 * vm.Worktrees.Count : 0;
             var desiredOthers = desiredTag + desiredSubmodule + desiredWorktree;
             var hasOverflow = (desiredBranches + desiredOthers > leftHeight);
 
@@ -315,8 +336,8 @@ namespace SourceGit.Views
 
             if (leftHeight > 0 && desiredBranches > leftHeight)
             {
-                var local = localBranchRows * 24.0;
-                var remote = remoteBranchRows * 24.0;
+                var local = localBranchRows * 22.0;
+                var remote = remoteBranchRows * 22.0;
                 var half = leftHeight / 2;
                 if (vm.IsLocalBranchGroupExpanded)
                 {
@@ -352,13 +373,13 @@ namespace SourceGit.Views
             {
                 if (vm.IsLocalBranchGroupExpanded)
                 {
-                    var height = localBranchRows * 24;
+                    var height = localBranchRows * 22;
                     LocalBranchTree.Height = height;
                 }
 
                 if (vm.IsRemoteGroupExpanded)
                 {
-                    var height = remoteBranchRows * 24;
+                    var height = remoteBranchRows * 22;
                     RemoteBranchTree.Height = height;
                 }
             }
@@ -518,21 +539,17 @@ namespace SourceGit.Views
                 SidebarMinWidth = 200;
                 SidebarWidth = new GridLength(layout.RepositorySearchCommitWidth, GridUnitType.Pixel);
             }
-            else if (_isNormalSidebarVisible)
-            {
-                SidebarMinWidth = 200;
-                SidebarWidth = new GridLength(layout.RepositorySidebarWidth, GridUnitType.Pixel);
-            }
             else
             {
-                SidebarMinWidth = 0;
-                SidebarWidth = new GridLength(0, GridUnitType.Pixel);
+                // Navigation remains available when the branch section is collapsed.
+                SidebarMinWidth = 160;
+                SidebarWidth = new GridLength(Math.Max(160, layout.RepositorySidebarWidth), GridUnitType.Pixel);
             }
         }
 
         private bool _isNormalSidebarVisible = true;
         private bool _isCommitSearchPanelVisible = false;
-        private double _sidebarMinWidth = 200;
+        private double _sidebarMinWidth = 160;
         private GridLength _sidebarWidth;
     }
 }

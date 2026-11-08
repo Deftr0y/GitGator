@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GitGator
+Comment=Free, Linux-first Git GUI
+Exec=GitGator %f
+Icon=io.github.Deftr0y.GitGator
+Terminal=false
+Categories=Development;RevisionControl;
+StartupWMClass=GitGator

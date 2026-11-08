@@ -121,7 +121,7 @@ namespace SourceGit.ViewModels
         {
             get;
             set;
-        } = false;
+        } = true;
 
         public bool ShowChangesInCommitDetailByDefault
         {
@@ -808,9 +808,9 @@ namespace SourceGit.ViewModels
         private bool _isLoading = true;
         private bool _isReadonly = true;
         private string _locale = "en_US";
-        private string _theme = "Default";
+        private string _theme = "Dark";
         private string _themeOverrides = string.Empty;
-        private string _defaultFontFamily = string.Empty;
+        private string _defaultFontFamily = "Ubuntu";
         private string _monospaceFontFamily = string.Empty;
         private double _defaultFontSize = 13;
         private double _editorFontSize = 13;
@@ -818,31 +818,31 @@ namespace SourceGit.ViewModels
         private double _zoom = 1.0;
         private LayoutInfo _layout = new();
 
-        private int _maxHistoryCommits = 20000;
+        private int _maxHistoryCommits = 5000;
         private int _subjectGuideLength = 50;
         private bool _useFixedTabWidth = true;
         private bool _useAutoHideScrollBars = true;
         private bool _useGitHubStyleAvatar = true;
         private bool _useCompactBranchNamesInGraph = true;
 
-        private bool _check4UpdatesOnStartup = true;
+        private bool _check4UpdatesOnStartup = false;
         private double _lastCheckUpdateTime = 0;
         private string _ignoreUpdateTag = string.Empty;
 
-        private bool _showTagsInGraph = true;
+        private bool _showTagsInGraph = false;
         private bool _useTwoColumnsLayoutInHistories = false;
-        private bool _displayTimeAsPeriodInHistories = false;
-        private bool _useSideBySideDiff = false;
+        private bool _displayTimeAsPeriodInHistories = true;
+        private bool _useSideBySideDiff = true;
         private bool _ignoreWhitespaceChangesInDiff = false;
         private bool _ignoreCRAtEOLInDiff = true;
-        private bool _useSyntaxHighlighting = false;
+        private bool _useSyntaxHighlighting = true;
         private bool _enableDiffViewWordWrap = false;
         private bool _showHiddenSymbolsInDiffView = false;
         private bool _useFullTextDiff = false;
         private int _lfsImageActiveIdx = 0;
         private int _imageDiffActiveIdx = 0;
         private bool _enableCompactFoldersInChangesTree = false;
-        private Models.ChangeViewMode _changeViewMode = Models.ChangeViewMode.List;
+        private Models.ChangeViewMode _changeViewMode = Models.ChangeViewMode.Tree;
 
         private string _gitDefaultCloneDir = string.Empty;
         private int _shellOrTerminalType = -1;

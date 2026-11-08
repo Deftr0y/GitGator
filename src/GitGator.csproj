@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <AssemblyName>GitGator</AssemblyName>
+    <RootNamespace>SourceGit</RootNamespace>
+    <DisableUpdateDetection>true</DisableUpdateDetection>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ApplicationManifest>App.manifest</ApplicationManifest>
@@ -9,14 +12,14 @@
     <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
     <InvariantGlobalization>false</InvariantGlobalization>
 
-    <Product>SourceGit</Product>
-    <Description>OpenSource GIT client</Description>
-    <Company>sourcegit-scm</Company>
-    <Copyright>Copyright © $([System.DateTime]::Now.Year) sourcegit-scm.</Copyright>
+    <Product>GitGator</Product>
+    <Description>Free, Linux-first Git GUI based on SourceGit</Description>
+    <Company>GitGator contributors</Company>
+    <Copyright>Copyright © $([System.DateTime]::Now.Year) GitGator contributors; based on SourceGit (MIT).</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/sourcegit-scm/sourcegit.git</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/sourcegit-scm/sourcegit.git</RepositoryUrl>
-    <RepositoryType>Public</RepositoryType>
+    <PackageProjectUrl>https://github.com/Deftr0y/GitGator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Deftr0y/GitGator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(DisableAOT)' != 'true'">
@@ -65,7 +68,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TrimmerRootAssembly Include="SourceGit" />
+    <TrimmerRootAssembly Include="GitGator" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
