@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 namespace SourceGit.Views
@@ -39,6 +40,33 @@ namespace SourceGit.Views
             {
                 if (SetAndRaise(IsNormalSidebarVisibleProperty, ref _isNormalSidebarVisible, value))
                     CalculateSidebarWidth();
+            }
+        }
+
+        public static readonly DirectProperty<Repository, bool> IsSidebarFilterVisibleProperty =
+            AvaloniaProperty.RegisterDirect<Repository, bool>(
+                nameof(IsSidebarFilterVisible),
+                static o => o.IsSidebarFilterVisible,
+                static (o, v) => o.IsSidebarFilterVisible = v);
+
+        public bool IsSidebarFilterVisible
+        {
+            get => _isSidebarFilterVisible;
+            set
+            {
+                if (!SetAndRaise(IsSidebarFilterVisibleProperty, ref _isSidebarFilterVisible, value))
+                    return;
+
+                if (value)
+                {
+                    // Focus after the box has been laid out.
+                    Dispatcher.UIThread.Post(() => FilterBox.Focus(), DispatcherPriority.Loaded);
+                }
+                else if (DataContext is ViewModels.Repository { Filter.Length: > 0 } repo)
+                {
+                    // A hidden box must never leave the lists silently filtered.
+                    repo.ClearFilter();
+                }
             }
         }
 
@@ -78,13 +106,17 @@ namespace SourceGit.Views
 
         public Repository()
         {
-            _sidebarWidth = new GridLength(ViewModels.Preferences.Instance.Layout.RepositorySidebarWidth);
+            _sidebarWidth = new GridLength(Math.Max(MinSidebarWidth, ViewModels.Preferences.Instance.Layout.RepositorySidebarWidth));
             InitializeComponent();
         }
 
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
+
+            if (DataContext is ViewModels.Repository { Filter.Length: > 0 })
+                SetAndRaise(IsSidebarFilterVisibleProperty, ref _isSidebarFilterVisible, true);
+
             UpdateLeftSidebarLayout();
         }
 
@@ -94,17 +126,6 @@ namespace SourceGit.Views
                 int.TryParse(button.Tag?.ToString(), out var page) &&
                 (!repo.IsBare || page == 0))
                 repo.SelectedViewIndex = page;
-
-            e.Handled = true;
-        }
-
-        private void OnNavigateToHead(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is ViewModels.Repository { CurrentBranch: { } head } repo)
-            {
-                LocalBranchTree.Select(head);
-                repo.NavigateToCommit(head.Head);
-            }
 
             e.Handled = true;
         }
@@ -144,7 +165,17 @@ namespace SourceGit.Views
 
         private void OnToggleSidebarFilter(object _, RoutedEventArgs e)
         {
-            FilterBox.Focus();
+            if (IsSidebarFilterVisible)
+                FilterBox.Focus();
+            else
+                IsSidebarFilterVisible = true;
+
+            e.Handled = true;
+        }
+
+        private void OnAdvancedSidebarToggled(object _, RoutedEventArgs e)
+        {
+            UpdateLeftSidebarLayout();
             e.Handled = true;
         }
 
@@ -271,20 +302,27 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.Repository { UIStates: { } } vm)
                 return;
 
-            var leftHeight = LeftSidebarGroups.Bounds.Height - 24.0 * 5 - 4;
+            // Local branches are always listed. The other groups only take space while Advanced is open.
+            var advanced = ViewModels.Preferences.Instance.Layout.IsAdvancedSidebarExpanded;
+            var isRemoteExpanded = advanced && vm.IsRemoteGroupExpanded;
+            var isTagExpanded = advanced && vm.IsTagGroupExpanded;
+            var isSubmoduleExpanded = advanced && vm.IsSubmoduleGroupExpanded;
+            var isWorktreeExpanded = advanced && vm.IsWorktreeGroupExpanded;
+
+            var leftHeight = LeftSidebarGroups.Bounds.Height - AdvancedToggleHeight - (advanced ? GroupHeaderHeight * 4 : 0) - 4;
             if (leftHeight <= 0)
                 return;
 
-            var localBranchRows = vm.IsLocalBranchGroupExpanded ? LocalBranchTree.Rows.Count : 0;
-            var remoteBranchRows = vm.IsRemoteGroupExpanded ? RemoteBranchTree.Rows.Count : 0;
-            var desiredBranches = (localBranchRows + remoteBranchRows) * 22.0;
-            var desiredTag = vm.IsTagGroupExpanded ? 22.0 * TagsList.Rows : 0;
-            var desiredSubmodule = vm.IsSubmoduleGroupExpanded ? 22.0 * SubmoduleList.Rows : 0;
-            var desiredWorktree = vm.IsWorktreeGroupExpanded ? 22.0 * vm.Worktrees.Count : 0;
+            var localBranchRows = LocalBranchTree.Rows.Count;
+            var remoteBranchRows = isRemoteExpanded ? RemoteBranchTree.Rows.Count : 0;
+            var desiredBranches = (localBranchRows + remoteBranchRows) * RowHeight;
+            var desiredTag = isTagExpanded ? RowHeight * TagsList.Rows : 0;
+            var desiredSubmodule = isSubmoduleExpanded ? RowHeight * SubmoduleList.Rows : 0;
+            var desiredWorktree = isWorktreeExpanded ? RowHeight * vm.Worktrees.Count : 0;
             var desiredOthers = desiredTag + desiredSubmodule + desiredWorktree;
             var hasOverflow = (desiredBranches + desiredOthers > leftHeight);
 
-            if (vm.IsWorktreeGroupExpanded)
+            if (isWorktreeExpanded)
             {
                 var height = desiredWorktree;
                 if (hasOverflow)
@@ -301,7 +339,7 @@ namespace SourceGit.Views
                 hasOverflow = (desiredBranches + desiredTag + desiredSubmodule) > leftHeight;
             }
 
-            if (vm.IsSubmoduleGroupExpanded)
+            if (isSubmoduleExpanded)
             {
                 var height = desiredSubmodule;
                 if (hasOverflow)
@@ -318,7 +356,7 @@ namespace SourceGit.Views
                 hasOverflow = (desiredBranches + desiredTag) > leftHeight;
             }
 
-            if (vm.IsTagGroupExpanded)
+            if (isTagExpanded)
             {
                 var height = desiredTag;
                 if (hasOverflow)
@@ -336,58 +374,41 @@ namespace SourceGit.Views
 
             if (leftHeight > 0 && desiredBranches > leftHeight)
             {
-                var local = localBranchRows * 22.0;
-                var remote = remoteBranchRows * 22.0;
+                var local = localBranchRows * RowHeight;
+                var remote = remoteBranchRows * RowHeight;
                 var half = leftHeight / 2;
-                if (vm.IsLocalBranchGroupExpanded)
+                if (!isRemoteExpanded)
                 {
-                    if (vm.IsRemoteGroupExpanded)
-                    {
-                        if (local < half)
-                        {
-                            LocalBranchTree.Height = local;
-                            RemoteBranchTree.Height = leftHeight - local;
-                        }
-                        else if (remote < half)
-                        {
-                            RemoteBranchTree.Height = remote;
-                            LocalBranchTree.Height = leftHeight - remote;
-                        }
-                        else
-                        {
-                            LocalBranchTree.Height = half;
-                            RemoteBranchTree.Height = half;
-                        }
-                    }
-                    else
-                    {
-                        LocalBranchTree.Height = leftHeight;
-                    }
+                    LocalBranchTree.Height = leftHeight;
                 }
-                else if (vm.IsRemoteGroupExpanded)
+                else if (local < half)
                 {
-                    RemoteBranchTree.Height = leftHeight;
+                    LocalBranchTree.Height = local;
+                    RemoteBranchTree.Height = leftHeight - local;
+                }
+                else if (remote < half)
+                {
+                    RemoteBranchTree.Height = remote;
+                    LocalBranchTree.Height = leftHeight - remote;
+                }
+                else
+                {
+                    LocalBranchTree.Height = half;
+                    RemoteBranchTree.Height = half;
                 }
             }
             else
             {
-                if (vm.IsLocalBranchGroupExpanded)
-                {
-                    var height = localBranchRows * 22;
-                    LocalBranchTree.Height = height;
-                }
+                LocalBranchTree.Height = localBranchRows * RowHeight;
 
-                if (vm.IsRemoteGroupExpanded)
-                {
-                    var height = remoteBranchRows * 22;
-                    RemoteBranchTree.Height = height;
-                }
+                if (isRemoteExpanded)
+                    RemoteBranchTree.Height = remoteBranchRows * RowHeight;
             }
         }
 
-        private void OnOpenSortLocalBranchMenu(object sender, RoutedEventArgs e)
+        private void OnOpenSortLocalBranchMenu(object sender, ContextRequestedEventArgs e)
         {
-            if (sender is Button button && DataContext is ViewModels.Repository repo)
+            if (sender is Control button && DataContext is ViewModels.Repository repo)
             {
                 var isSortByName = repo.IsSortingLocalBranchByName;
                 var byNameAsc = new MenuItem();
@@ -542,14 +563,20 @@ namespace SourceGit.Views
             else
             {
                 // Navigation remains available when the branch section is collapsed.
-                SidebarMinWidth = 160;
-                SidebarWidth = new GridLength(Math.Max(160, layout.RepositorySidebarWidth), GridUnitType.Pixel);
+                SidebarMinWidth = MinSidebarWidth;
+                SidebarWidth = new GridLength(Math.Max(MinSidebarWidth, layout.RepositorySidebarWidth), GridUnitType.Pixel);
             }
         }
 
+        private const double RowHeight = 28;
+        private const double GroupHeaderHeight = 28;
+        private const double AdvancedToggleHeight = 40;
+        private const double MinSidebarWidth = 208;
+
         private bool _isNormalSidebarVisible = true;
         private bool _isCommitSearchPanelVisible = false;
-        private double _sidebarMinWidth = 160;
+        private bool _isSidebarFilterVisible = false;
+        private double _sidebarMinWidth = MinSidebarWidth;
         private GridLength _sidebarWidth;
     }
 }

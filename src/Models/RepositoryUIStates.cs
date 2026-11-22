@@ -25,7 +25,14 @@ namespace SourceGit.Models
         {
             get;
             set;
-        } = true;
+        } = false;
+
+        // Bumped when a default changes, so saved states pick the new default up once.
+        public int LayoutVersion
+        {
+            get;
+            set;
+        } = 0;
 
         public bool IsAuthorTimeColumnVisibleInHistory
         {
@@ -243,6 +250,8 @@ namespace SourceGit.Models
             set;
         } = [];
 
+        private const int CurrentLayoutVersion = 1;
+
         public static RepositoryUIStates Load(string gitDir)
         {
             var fileInfo = new FileInfo(Path.Combine(gitDir, "gitgator.uistates"));
@@ -264,6 +273,13 @@ namespace SourceGit.Models
                 {
                     states = new RepositoryUIStates();
                 }
+            }
+
+            if (states.LayoutVersion < CurrentLayoutVersion)
+            {
+                // v1: the commit ID column is off unless the user turns it back on.
+                states.IsSHAColumnVisibleInHistory = false;
+                states.LayoutVersion = CurrentLayoutVersion;
             }
 
             states._file = fullpath;

@@ -32,25 +32,24 @@
                             Margin="0,0,12,0"/>
 
           <!-- Line -->
-          <Rectangle Height=".65" Margin="8,8,12,8" Fill="{DynamicResource Brush.Border2}"/>
+          <Rectangle Height="1" Margin="10,8,12,10" Fill="{DynamicResource Brush.Border0}"/>
 
-          <Grid Margin="12,0,12,6" ColumnDefinitions="Auto,*">
-            <TextBlock Text="Changed files" FontWeight="SemiBold" FontSize="12"/>
-            <TextBlock Grid.Column="1" Margin="6,0" Foreground="{DynamicResource Brush.FG2}" FontSize="11" VerticalAlignment="Center"
-                       Text="{Binding Changes, Converter={x:Static c:ListConverters.ToCount}}"/>
-          </Grid>
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="10,0,12,6">
+            <TextBlock Classes="eyebrow" Text="FILES CHANGED"/>
+            <TextBlock Classes="eyebrow" Text="{Binding Changes, Converter={x:Static c:ListConverters.ToCount}}"/>
+          </StackPanel>
 
           <!-- Change List -->
           <ListBox Background="Transparent"
-                   Margin="12,0,12,6"
+                   Margin="6,0,12,6"
                    SelectionMode="Single"
                    ItemsSource="{Binding Changes, Converter={x:Static c:ListConverters.Top100Changes}}"
                    KeyDown="OnCommitListKeyDown">
             <ListBox.Styles>
               <Style Selector="ListBoxItem">
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="MinHeight" Value="22"/>
-                <Setter Property="CornerRadius" Value="4"/>
+                <Setter Property="MinHeight" Value="26"/>
+                <Setter Property="CornerRadius" Value="6"/>
               </Style>
             </ListBox.Styles>
 
@@ -62,7 +61,7 @@
 
             <ListBox.ItemTemplate>
               <DataTemplate DataType="m:Change">
-                <Grid Background="Transparent" Height="22" ColumnDefinitions="24,*" ContextRequested="OnChangeContextRequested" DoubleTapped="OnChangeDoubleTapped">
+                <Grid Background="Transparent" Height="26" ColumnDefinitions="24,*" ContextRequested="OnChangeContextRequested" DoubleTapped="OnChangeDoubleTapped">
                   <ToolTip.Tip>
                     <TextBlock TextWrapping="Wrap">
                       <Run Text="{Binding Path, Mode=OneWay}"/>

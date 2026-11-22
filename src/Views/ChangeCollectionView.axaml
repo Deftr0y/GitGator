@@ -23,7 +23,8 @@
     </Style>
 
     <Style Selector="ListBoxItem">
-      <Setter Property="Height" Value="22"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="CornerRadius" Value="6"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="Padding" Value="0"/>
     </Style>
@@ -39,7 +40,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="vm:ChangeTreeNode">
             <StackPanel Orientation="Horizontal"
-                        Height="22"
+                        Height="28"
                         Margin="{Binding Depth, Converter={x:Static c:IntConverters.ToTreeMargin}}"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
@@ -89,7 +90,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="m:Change">
             <StackPanel Orientation="Horizontal"
-                        Height="22"
+                        Height="28"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
                         DataContextChanged="OnRowDataContextChanged">
@@ -124,7 +125,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate DataType="m:Change">
             <StackPanel Orientation="Horizontal"
-                        Height="22"
+                        Height="28"
                         Background="Transparent"
                         DoubleTapped="OnRowDoubleTapped"
                         DataContextChanged="OnRowDataContextChanged">

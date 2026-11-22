@@ -10,146 +10,265 @@
              x:DataType="vm:WorkingCopy">
   <UserControl.Styles>
     <Style Selector="Button.workspace_action">
-      <Setter Property="Height" Value="24"/>
-      <Setter Property="MinHeight" Value="24"/>
-      <Setter Property="Padding" Value="8,0"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="MinHeight" Value="28"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="FontSize" Value="12"/>
     </Style>
     <Style Selector="ToggleButton.preview_toggle">
-      <Setter Property="Height" Value="24"/>
-      <Setter Property="MinHeight" Value="24"/>
-      <Setter Property="Padding" Value="7,0"/>
-      <Setter Property="CornerRadius" Value="4"/>
-      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Height" Value="28"/>
+      <Setter Property="MinHeight" Value="28"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.FlatButton.Background}"/>
       <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="BorderBrush" Value="Transparent"/>
-      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border2}"/>
+      <Setter Property="FontSize" Value="12"/>
     </Style>
-    <Style Selector="ToggleButton.preview_toggle:checked">
-      <Setter Property="Background" Value="{DynamicResource Brush.AccentHovered}"/>
+    <Style Selector="ToggleButton.preview_toggle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.FlatButton.BackgroundHovered}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border1}"/>
+    </Style>
+    <Style Selector="ToggleButton.preview_toggle:checked /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.RowSelected}"/>
       <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
     </Style>
     <Style Selector="TextBlock.workspace_count">
-      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontSize" Value="12"/>
       <Setter Property="Foreground" Value="{DynamicResource Brush.FG2}"/>
+    </Style>
+    <!-- Blue marks the action an AI performs. -->
+    <Style Selector="Button.ai_action">
+      <Setter Property="Height" Value="30"/>
+      <Setter Property="MinHeight" Value="30"/>
+      <Setter Property="Padding" Value="10,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="Transparent"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.AISurface}"/>
+    </Style>
+    <Style Selector="Button.ai_action TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource Brush.AI}"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+    <Style Selector="Button.ai_action Path">
+      <Setter Property="Fill" Value="{DynamicResource Brush.AI}"/>
+    </Style>
+    <Style Selector="Button.ai_action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.AISurface}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.AI}"/>
+    </Style>
+    <Style Selector="Button.commit">
+      <Setter Property="Height" Value="34"/>
+      <Setter Property="MinHeight" Value="34"/>
+      <Setter Property="MinWidth" Value="132"/>
+      <Setter Property="Padding" Value="16,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style Selector="Border.commit_count">
+      <Setter Property="Background" Value="#33FFFFFF"/>
+      <Setter Property="CornerRadius" Value="9"/>
+      <Setter Property="Height" Value="18"/>
+      <Setter Property="MinWidth" Value="18"/>
+      <Setter Property="Padding" Value="6,0"/>
+    </Style>
+    <Style Selector="Border.commit_count > TextBlock">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBox.composer">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="TextBox.composer:pointerover /template/ Border#PART_BorderElement, TextBox.composer:focus /template/ Border#PART_BorderElement">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
     </Style>
   </UserControl.Styles>
 
   <Grid x:Name="MainLayout" ColumnDefinitions="*,0,0" SizeChanged="OnMainLayoutSizeChanged" Background="{DynamicResource Brush.Contents}">
-    <!-- The workspace is one full-width stack until preview is explicitly enabled. -->
-    <Grid Grid.Column="0" Background="{DynamicResource Brush.Window}" RowDefinitions="1.35*,4,*,Auto" MinWidth="360">
-      <Grid Grid.Row="0" RowDefinitions="62,Auto,*" MinHeight="106">
-        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
-          <Grid RowDefinitions="32,30">
-          <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto,Auto" Margin="10,0,6,0" ColumnSpacing="4">
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-              <TextBlock Text="Changes" FontWeight="SemiBold"/>
-              <TextBlock Classes="workspace_count" Text="{Binding UnstagedCountInfo}" VerticalAlignment="Center"/>
-              <v:LoadingIcon Width="12" Height="12" IsVisible="{Binding IsStaging}"/>
-            </StackPanel>
-            <Button Grid.Column="2" x:Name="StageSelectedButton" Classes="flat workspace_action" Content="Stage" Click="OnStageSelectedButtonClicked"
-                    IsEnabled="{Binding SelectedUnstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
-                    ToolTip.Tip="Stage selected files or folders · Space / Enter"/>
-            <Button Grid.Column="3" x:Name="StageAllButton" Classes="flat workspace_action" Content="Stage all" Click="OnStageAllButtonClicked"
-                    IsEnabled="{Binding VisibleUnstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
-                    HotKey="{OnPlatform Ctrl+Shift+S, macOS=⌘+Shift+S}" ToolTip.Tip="Stage all files shown by the current filter"/>
-            <Button Grid.Column="4" Classes="icon_button" Width="24" Height="24" ToolTip.Tip="Change options">
-              <Path Width="14" Height="14" Data="{StaticResource Icons.More}"/>
-              <Button.Flyout>
-                <Flyout Placement="BottomEdgeAlignedRight">
-                  <StackPanel MinWidth="210" Spacing="9" Margin="4">
-                    <TextBlock Text="Change options" FontWeight="SemiBold"/>
-                    <CheckBox Content="Show new files" IsChecked="{Binding IncludeUntracked, Mode=TwoWay}"/>
-                    <Button Classes="flat workspace_action" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Content="Manage ignored local edits…" Click="OnOpenAssumeUnchanged"/>
-                    <Separator/>
-                    <Button Classes="flat workspace_action" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
-                            Content="Discard changes…" Command="{Binding DiscardAllChanges}"/>
-                  </StackPanel>
-                </Flyout>
-              </Button.Flyout>
+    <!-- One list of what changed, one message, one button. Staging appears only when it is used. -->
+    <Grid Grid.Column="0" x:Name="ChangesLayout" Background="{DynamicResource Brush.Window}" RowDefinitions="Auto,Auto,*,0,0,Auto" MinWidth="400">
+      <Grid Grid.Row="0" Height="52" Margin="16,0,10,0" ColumnSpacing="8">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="6*" MaxWidth="260"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Classes="page_title" Text="Changes"/>
+        <Border Grid.Column="1" Classes="count_pill" IsVisible="{Binding Unstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}">
+          <TextBlock Text="{Binding Unstaged.Count, Converter={x:Static c:IntConverters.ToBadgeWithLimit}}"/>
+        </Border>
+        <v:LoadingIcon Grid.Column="2" Width="12" Height="12" IsVisible="{Binding IsStaging}"/>
+
+        <TextBox Grid.Column="4" x:Name="LocalChangesSearchBox" Height="28" MinWidth="40" HorizontalAlignment="Stretch"
+                 VerticalAlignment="Center" CornerRadius="8" FontSize="12"
+                 Text="{Binding Filter, Mode=TwoWay}" Watermark="Filter files" VerticalContentAlignment="Center">
+          <!-- A short list needs no filter; an active filter always keeps its box. -->
+          <TextBox.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+              <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanFour}"/>
+              <Binding Path="Filter" Converter="{x:Static StringConverters.IsNotNullOrEmpty}"/>
+            </MultiBinding>
+          </TextBox.IsVisible>
+          <TextBox.InnerLeftContent>
+            <Path Width="12" Height="12" Margin="9,0,2,0" Fill="{DynamicResource Brush.FG3}" Data="{StaticResource Icons.Search}"/>
+          </TextBox.InnerLeftContent>
+          <TextBox.InnerRightContent>
+            <Button Classes="icon_button" Focusable="False" Width="22" Command="{Binding ClearFilter}" ToolTip.Tip="Clear filter"
+                    IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <Path Width="10" Height="10" Data="{StaticResource Icons.Clear}"/>
             </Button>
-          </Grid>
-          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,0,6,5" ColumnSpacing="6">
-            <TextBox Grid.Column="0" x:Name="LocalChangesSearchBox" Height="24" MinWidth="40"
-                     VerticalAlignment="Center" CornerRadius="4" FontSize="11"
-                     Text="{Binding Filter, Mode=TwoWay}" Watermark="Filter files" VerticalContentAlignment="Center">
-              <TextBox.InnerLeftContent>
-                <Path Width="11" Height="11" Margin="7,0,2,0" Fill="{DynamicResource Brush.FG2}" Data="{StaticResource Icons.Search}"/>
-              </TextBox.InnerLeftContent>
-              <TextBox.InnerRightContent>
-                <Button Classes="icon_button" Focusable="False" Width="20" Command="{Binding ClearFilter}" ToolTip.Tip="Clear filter"
-                        IsVisible="{Binding Filter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                  <Path Width="10" Height="10" Data="{StaticResource Icons.Clear}"/>
-                </Button>
-              </TextBox.InnerRightContent>
-            </TextBox>
-            <ToggleButton Grid.Column="1" x:Name="PreviewToggle" Classes="preview_toggle" IsChecked="{Binding IsPreviewVisible, Mode=TwoWay}"
-                          ToolTip.Tip="Show or hide file preview">
-              <StackPanel Orientation="Horizontal" Spacing="5">
-                <Path Width="12" Height="12" Data="{StaticResource Icons.Eye}"/>
-                <TextBlock Text="Preview file" FontSize="11"/>
+          </TextBox.InnerRightContent>
+        </TextBox>
+
+        <Button Grid.Column="5" x:Name="StageSelectedButton" Classes="flat workspace_action" Content="Stage selected" Click="OnStageSelectedButtonClicked"
+                IsVisible="{Binding SelectedUnstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
+                ToolTip.Tip="Put only the selected files in the next commit · Space / Enter"/>
+        <ToggleButton Grid.Column="6" x:Name="PreviewToggle" Classes="preview_toggle" IsChecked="{Binding IsPreviewVisible, Mode=TwoWay}"
+                      ToolTip.Tip="Show what changed inside the selected file">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Path Width="13" Height="13" Data="{StaticResource Icons.Eye}"/>
+            <TextBlock Text="Preview" FontSize="12"/>
+          </StackPanel>
+        </ToggleButton>
+        <Button Grid.Column="7" Classes="icon_button" Width="28" Height="28" ToolTip.Tip="More">
+          <Path Width="15" Height="15" Data="{StaticResource Icons.More}"/>
+          <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight">
+              <StackPanel MinWidth="220" Spacing="8" Margin="4">
+                <Button x:Name="StageAllButton" Classes="flat workspace_action" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Content="Stage all" Click="OnStageAllButtonClicked"
+                        IsEnabled="{Binding VisibleUnstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
+                        ToolTip.Tip="{OnPlatform 'Ctrl+Shift+S', macOS='⌘+Shift+S'}"/>
+                <CheckBox Content="Show new files" IsChecked="{Binding IncludeUntracked, Mode=TwoWay}"/>
+                <Button Classes="flat workspace_action" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Content="Manage ignored local edits…" Click="OnOpenAssumeUnchanged"/>
+                <Separator/>
+                <Button Classes="flat workspace_action" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                        Content="Discard changes…" Command="{Binding DiscardAllChanges}"/>
               </StackPanel>
-            </ToggleButton>
-          </Grid>
-          </Grid>
-        </Border>
-
-        <Border Grid.Row="1" Padding="10,4" Background="{DynamicResource Brush.Conflict.TheirsBG}"
-                BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border2}" IsVisible="{Binding HasUnsolvedConflicts}">
-          <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-            <Path Width="12" Height="12" Data="{StaticResource Icons.Conflict}" Fill="{DynamicResource Brush.Conflict}"/>
-            <TextBlock Grid.Column="1" Text="Unresolved conflicts" FontSize="11" VerticalAlignment="Center"/>
-            <Button Grid.Column="2" Classes="flat workspace_action" Content="Resolve" Command="{Binding ResolveConflicts}"/>
-            <Button Grid.Column="3" Classes="flat workspace_action" Content="Merge tool" Click="OnOpenExternalMergeToolAllConflicts"/>
-          </Grid>
-        </Border>
-
-        <Grid Grid.Row="2" Margin="0,2,0,0">
-          <v:ChangeCollectionView x:Name="UnstagedChangesView" IsUnstagedChange="True" Background="Transparent" ViewMode="Tree" FontSize="12"
-                                  EnableCompactFolders="{Binding Source={x:Static vm:Preferences.Instance}, Path=EnableCompactFoldersInChangesTree}"
-                                  Changes="{Binding VisibleUnstaged}" Selection="{Binding SelectedUnstaged, Mode=TwoWay}"
-                                  ContextRequested="OnUnstagedContextRequested" ChangeDoubleTapped="OnUnstagedChangeDoubleTapped" KeyDown="OnUnstagedKeyDown"/>
-          <TextBlock Classes="workspace_count" Text="No unstaged files" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
-                     IsVisible="{Binding VisibleUnstaged.Count, Converter={x:Static c:IntConverters.IsZero}}"/>
-        </Grid>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
       </Grid>
 
-      <GridSplitter Grid.Row="1" MinHeight="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                    Background="{DynamicResource Brush.Border0}" Focusable="False"/>
-
-      <Grid Grid.Row="2" RowDefinitions="34,*" MinHeight="96">
-        <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
-          <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="10,0,6,0" ColumnSpacing="4">
-            <TextBlock Text="Staged Changes" FontWeight="SemiBold" VerticalAlignment="Center"/>
-            <TextBlock Grid.Column="1" Classes="workspace_count" Text="{Binding StagedCountInfo}" Margin="2,0,0,0" VerticalAlignment="Center"/>
-            <v:LoadingIcon Grid.Column="2" Width="12" Height="12" Margin="6,0" HorizontalAlignment="Left" IsVisible="{Binding IsUnstaging}"/>
-            <Button Grid.Column="3" x:Name="UnstageSelectedButton" Classes="flat workspace_action" Content="Unstage" Click="OnUnstageSelectedButtonClicked"
-                    IsEnabled="{Binding SelectedStaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
-                    ToolTip.Tip="Unstage selected files or folders · Space / Enter"/>
-            <Button Grid.Column="4" x:Name="UnstageAllButton" Classes="flat workspace_action" Content="Unstage all" Click="OnUnstageAllButtonClicked"
-                    IsEnabled="{Binding VisibleStaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
-                    HotKey="{OnPlatform Ctrl+Shift+U, macOS=⌘+Shift+U}" ToolTip.Tip="Unstage all files shown by the current filter"/>
-          </Grid>
-        </Border>
-        <Grid Grid.Row="1" Margin="0,2,0,0">
-          <v:ChangeCollectionView x:Name="StagedChangesView" IsUnstagedChange="False" Background="Transparent" ViewMode="Tree" FontSize="12"
-                                  EnableCompactFolders="{Binding Source={x:Static vm:Preferences.Instance}, Path=EnableCompactFoldersInChangesTree}"
-                                  Changes="{Binding VisibleStaged}" Selection="{Binding SelectedStaged, Mode=TwoWay}"
-                                  ContextRequested="OnStagedContextRequested" ChangeDoubleTapped="OnStagedChangeDoubleTapped" KeyDown="OnStagedKeyDown"/>
-          <TextBlock Classes="workspace_count" Text="No staged files" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
-                     IsVisible="{Binding VisibleStaged.Count, Converter={x:Static c:IntConverters.IsZero}}"/>
+      <Border Grid.Row="1" Margin="12,0,12,8" Padding="12,8" CornerRadius="10" Background="{DynamicResource Brush.Conflict.TheirsBG}"
+              BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}" IsVisible="{Binding HasUnsolvedConflicts}">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+          <Path Width="14" Height="14" Data="{StaticResource Icons.Conflict}" Fill="{DynamicResource Brush.Conflict}"/>
+          <TextBlock Grid.Column="1" Text="Some files changed in two places and need a decision" TextTrimming="CharacterEllipsis"/>
+          <Button Grid.Column="2" Classes="flat workspace_action" Content="Resolve" Command="{Binding ResolveConflicts}"/>
+          <Button Grid.Column="3" Classes="flat workspace_action" Content="Merge tool" Click="OnOpenExternalMergeToolAllConflicts"/>
         </Grid>
+      </Border>
+
+      <Grid Grid.Row="2" MinHeight="96">
+        <v:ChangeCollectionView x:Name="UnstagedChangesView" IsUnstagedChange="True" Background="Transparent" ViewMode="Tree" FontSize="13" Margin="8,0,2,0"
+                                EnableCompactFolders="{Binding Source={x:Static vm:Preferences.Instance}, Path=EnableCompactFoldersInChangesTree}"
+                                Changes="{Binding VisibleUnstaged}" Selection="{Binding SelectedUnstaged, Mode=TwoWay}"
+                                ContextRequested="OnUnstagedContextRequested" ChangeDoubleTapped="OnUnstagedChangeDoubleTapped" KeyDown="OnUnstagedKeyDown"/>
+
+        <!-- Nothing to do: say so plainly instead of showing an empty table. -->
+        <StackPanel Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <StackPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsZero}"/>
+              <Binding Path="Staged.Count" Converter="{x:Static c:IntConverters.IsZero}"/>
+            </MultiBinding>
+          </StackPanel.IsVisible>
+          <Path Width="30" Height="30" Margin="0,0,0,6" Data="{StaticResource Icons.CheckCircled}" Fill="{DynamicResource Brush.Success}"/>
+          <TextBlock Classes="page_title" Text="No changes" HorizontalAlignment="Center"/>
+          <TextBlock Classes="muted" Text="Your files match the last commit." HorizontalAlignment="Center"/>
+          <!-- The composer is hidden while there is nothing to commit; this is the way back to the last commit. -->
+          <Button x:Name="AmendLastCommitButton" Classes="flat workspace_action" Margin="0,12,0,0" HorizontalAlignment="Center"
+                  Content="Amend last commit…" Click="OnAmendLastCommit"
+                  ToolTip.Tip="Reword or add to the commit you just made">
+            <Button.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="UseAmend" Converter="{x:Static BoolConverters.Not}"/>
+                <Binding Path="InProgressContext" Converter="{x:Static ObjectConverters.IsNull}"/>
+              </MultiBinding>
+            </Button.IsVisible>
+          </Button>
+        </StackPanel>
+        <TextBlock Classes="muted" Text="Everything is staged for the next commit" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+          <TextBlock.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsZero}"/>
+              <Binding Path="Staged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
+            </MultiBinding>
+          </TextBlock.IsVisible>
+        </TextBlock>
+        <TextBlock Classes="muted" Text="No files match the filter" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+          <TextBlock.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="VisibleUnstaged.Count" Converter="{x:Static c:IntConverters.IsZero}"/>
+              <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
+            </MultiBinding>
+          </TextBlock.IsVisible>
+        </TextBlock>
       </Grid>
 
-      <Border Grid.Row="3" Padding="8" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource Brush.Border2}">
-        <Grid RowDefinitions="80,Auto" RowSpacing="6">
-          <TextBox x:Name="CommitMessageEditor" Text="{Binding CommitMessage, Mode=TwoWay}" Watermark="Commit message"
-                   AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" FontSize="12" Padding="8"
-                   FontFamily="{DynamicResource Fonts.Monospace}" CornerRadius="4"/>
-          <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-            <Button Grid.Column="0" Classes="flat workspace_action" Content="Options" ToolTip.Tip="Commit options">
+      <GridSplitter Grid.Row="3" MinHeight="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    Background="{DynamicResource Brush.Border0}" Focusable="False"
+                    IsVisible="{Binding Staged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"/>
+
+      <Grid Grid.Row="4" RowDefinitions="44,*" IsVisible="{Binding Staged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,0,10,0" ColumnSpacing="8">
+          <TextBlock Text="Staged for commit" FontWeight="SemiBold" FontSize="14"/>
+          <Border Grid.Column="1" Classes="count_pill">
+            <TextBlock Text="{Binding Staged.Count, Converter={x:Static c:IntConverters.ToBadgeWithLimit}}"/>
+          </Border>
+          <v:LoadingIcon Grid.Column="2" Width="12" Height="12" HorizontalAlignment="Left" IsVisible="{Binding IsUnstaging}"/>
+          <Button Grid.Column="3" x:Name="UnstageSelectedButton" Classes="flat workspace_action" Content="Unstage selected" Click="OnUnstageSelectedButtonClicked"
+                  IsVisible="{Binding SelectedStaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
+                  ToolTip.Tip="Take the selected files out of the next commit · Space / Enter"/>
+          <Button Grid.Column="4" x:Name="UnstageAllButton" Classes="flat workspace_action" Content="Unstage all" Click="OnUnstageAllButtonClicked"
+                  IsEnabled="{Binding VisibleStaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}"
+                  ToolTip.Tip="{OnPlatform 'Ctrl+Shift+U', macOS='⌘+Shift+U'}"/>
+        </Grid>
+        <v:ChangeCollectionView Grid.Row="1" x:Name="StagedChangesView" IsUnstagedChange="False" Background="Transparent" ViewMode="Tree" FontSize="13" Margin="8,0,2,0"
+                                EnableCompactFolders="{Binding Source={x:Static vm:Preferences.Instance}, Path=EnableCompactFoldersInChangesTree}"
+                                Changes="{Binding VisibleStaged}" Selection="{Binding SelectedStaged, Mode=TwoWay}"
+                                ContextRequested="OnStagedContextRequested" ChangeDoubleTapped="OnStagedChangeDoubleTapped" KeyDown="OnStagedKeyDown"/>
+      </Grid>
+
+      <!-- Composer: the message and its actions live in one rounded surface. -->
+      <Border Grid.Row="5" x:Name="Composer" Margin="12,8,12,12" CornerRadius="12" Background="{DynamicResource Brush.Surface}"
+              BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}">
+        <!-- With nothing to commit there is nothing to write, so the composer steps aside. -->
+        <Border.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.Or}">
+            <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
+            <Binding Path="Staged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
+            <Binding Path="UseAmend"/>
+            <Binding Path="InProgressContext" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+            <Binding Path="CommitMessage" Converter="{x:Static c:StringConverters.IsNotNullOrWhitespace}"/>
+          </MultiBinding>
+        </Border.IsVisible>
+        <Grid RowDefinitions="Auto,Auto">
+          <TextBox x:Name="CommitMessageEditor" Classes="composer" Text="{Binding CommitMessage, Mode=TwoWay}" Watermark="Describe what changed"
+                   AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" FontSize="13" Padding="14,12,14,4"
+                   MinHeight="66" MaxHeight="150"/>
+          <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8" Margin="10,4,10,10">
+            <Button Grid.Column="0" x:Name="WriteWithAIButton" Classes="ai_action" Click="OnWriteWithAI"
+                    ToolTip.Tip="Draft the commit message from your changes">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <Path Width="13" Height="13" Data="{StaticResource Icons.AIAssist}"/>
+                <TextBlock Text="Write with AI"/>
+              </StackPanel>
+            </Button>
+            <Button Grid.Column="1" Classes="icon_button" Width="30" Height="30" ToolTip.Tip="Commit options">
+              <Path Width="14" Height="14" Data="{StaticResource Icons.Settings2}"/>
               <Button.Flyout>
                 <Flyout Placement="TopEdgeAlignedLeft">
                   <StackPanel MinWidth="225" Spacing="9" Margin="4">
@@ -200,13 +319,14 @@
                 </Flyout>
               </Button.Flyout>
             </Button>
-            <WrapPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <WrapPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Right">
               <TextBlock Classes="workspace_count" Text="Amending previous commit" Margin="0,0,12,0" IsVisible="{Binding UseAmend}"/>
               <TextBlock Classes="workspace_count" Text="Sign-off" Margin="0,0,12,0" IsVisible="{Binding EnableSignOff}"/>
-              <TextBlock FontSize="11" Foreground="{DynamicResource Brush.Conflict}" Text="Hooks skipped" IsVisible="{Binding NoVerifyOnCommit}"/>
+              <TextBlock FontSize="12" Foreground="{DynamicResource Brush.Conflict}" Text="Hooks skipped" IsVisible="{Binding NoVerifyOnCommit}"/>
             </WrapPanel>
-            <v:LoadingIcon Grid.Column="2" Width="15" Height="15" IsVisible="{Binding IsCommitting}"/>
-            <Button Grid.Column="3" Classes="flat primary" Height="30" MinHeight="30" MinWidth="140" CornerRadius="4" Padding="16,0"
+            <v:LoadingIcon Grid.Column="3" Width="15" Height="15" IsVisible="{Binding IsCommitting}"/>
+
+            <Button Grid.Column="4" Classes="flat primary commit"
                     Content="{DynamicResource Text.Repository.Continue}" Click="OnContinue"
                     IsVisible="{Binding InProgressContext, Converter={x:Static ObjectConverters.IsNotNull}}">
               <Button.IsEnabled>
@@ -216,21 +336,58 @@
                 </MultiBinding>
               </Button.IsEnabled>
             </Button>
-            <Button Grid.Column="3" x:Name="CommitButton" Classes="flat primary" Height="30" MinHeight="30" MinWidth="140" CornerRadius="4" Padding="16,0"
-                    Content="Commit staged" Click="OnCommit" HotKey="{OnPlatform Ctrl+Enter, macOS=⌘+Enter}"
-                    IsVisible="{Binding InProgressContext, Converter={x:Static ObjectConverters.IsNull}}"
-                    ToolTip.Tip="Commit staged files locally · Ctrl+Enter">
+
+            <!-- Nothing staged: the button commits everything, the way most work is saved. -->
+            <Button Grid.Column="4" x:Name="CommitAllButton" Classes="flat primary commit" Click="OnCommitWithAutoStage"
+                    ToolTip.Tip="{OnPlatform 'Commit every change on this computer · Ctrl+Enter', macOS='Commit every change on this computer · ⌘+Enter'}">
+              <Button.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="InProgressContext" Converter="{x:Static ObjectConverters.IsNull}"/>
+                  <Binding Path="Staged.Count" Converter="{x:Static c:IntConverters.IsZero}"/>
+                  <Binding Path="UseAmend" Converter="{x:Static BoolConverters.Not}"/>
+                </MultiBinding>
+              </Button.IsVisible>
               <Button.IsEnabled>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                   <Binding Path="IsCommitting" Converter="{x:Static BoolConverters.Not}"/>
                   <Binding Path="HasUnsolvedConflicts" Converter="{x:Static BoolConverters.Not}"/>
                   <Binding Path="CommitMessage" Converter="{x:Static c:StringConverters.IsNotNullOrWhitespace}"/>
+                  <Binding Path="Unstaged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
+                </MultiBinding>
+              </Button.IsEnabled>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Commit all" FontWeight="SemiBold"/>
+                <Border Classes="commit_count" IsVisible="{Binding Unstaged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}">
+                  <TextBlock Text="{Binding Unstaged.Count, Converter={x:Static c:IntConverters.ToBadgeWithLimit}}"/>
+                </Border>
+              </StackPanel>
+            </Button>
+
+            <!-- Something staged: only those files go in. -->
+            <Button Grid.Column="4" x:Name="CommitButton" Classes="flat primary commit" Click="OnCommit"
+                    ToolTip.Tip="{OnPlatform 'Commit only the staged files · Ctrl+Enter', macOS='Commit only the staged files · ⌘+Enter'}">
+              <Button.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="InProgressContext" Converter="{x:Static ObjectConverters.IsNull}"/>
                   <MultiBinding Converter="{x:Static BoolConverters.Or}">
                     <Binding Path="Staged.Count" Converter="{x:Static c:IntConverters.IsGreaterThanZero}"/>
                     <Binding Path="UseAmend"/>
                   </MultiBinding>
                 </MultiBinding>
+              </Button.IsVisible>
+              <Button.IsEnabled>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="IsCommitting" Converter="{x:Static BoolConverters.Not}"/>
+                  <Binding Path="HasUnsolvedConflicts" Converter="{x:Static BoolConverters.Not}"/>
+                  <Binding Path="CommitMessage" Converter="{x:Static c:StringConverters.IsNotNullOrWhitespace}"/>
+                </MultiBinding>
               </Button.IsEnabled>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Commit staged" FontWeight="SemiBold"/>
+                <Border Classes="commit_count" IsVisible="{Binding Staged.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}}">
+                  <TextBlock Text="{Binding Staged.Count, Converter={x:Static c:IntConverters.ToBadgeWithLimit}}"/>
+                </Border>
+              </StackPanel>
             </Button>
           </Grid>
         </Grid>
@@ -239,11 +396,11 @@
 
     <GridSplitter Grid.Column="1" MinWidth="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False"
                   IsVisible="{Binding IsPreviewVisible}" Background="{DynamicResource Brush.Border0}"/>
-    <Grid Grid.Column="2" RowDefinitions="34,*" IsVisible="{Binding IsPreviewVisible}" Background="{DynamicResource Brush.Contents}">
-      <Border Grid.Row="0" Padding="10,0,6,0" Background="{DynamicResource Brush.Window}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
+    <Grid Grid.Column="2" RowDefinitions="48,*" IsVisible="{Binding IsPreviewVisible}" Background="{DynamicResource Brush.Contents}">
+      <Border Grid.Row="0" Padding="16,0,10,0" Background="{DynamicResource Brush.Window}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
         <Grid ColumnDefinitions="*,Auto">
-          <TextBlock Text="File preview" FontWeight="SemiBold" VerticalAlignment="Center"/>
-          <Button Grid.Column="1" x:Name="ClosePreviewButton" Classes="icon_button" Width="24" Height="24" Command="{Binding HidePreview}" ToolTip.Tip="Close preview">
+          <TextBlock Classes="page_title" Text="Preview"/>
+          <Button Grid.Column="1" x:Name="ClosePreviewButton" Classes="icon_button" Width="28" Height="28" Command="{Binding HidePreview}" ToolTip.Tip="Close preview">
             <Path Width="12" Height="12" Data="{StaticResource Icons.Clear}"/>
           </Button>
         </Grid>
@@ -260,6 +417,16 @@
       </Grid>
     </Grid>
 
+    <!-- Keyboard shortcuts keep working whichever button is on screen. -->
+    <Button Width="0" Height="0" Background="Transparent" Click="OnCommitByHotKey" HotKey="{OnPlatform Ctrl+Enter, macOS=⌘+Enter}">
+      <Button.IsEnabled>
+        <MultiBinding Converter="{x:Static BoolConverters.And}">
+          <Binding Path="IsCommitting" Converter="{x:Static BoolConverters.Not}"/>
+          <Binding Path="HasUnsolvedConflicts" Converter="{x:Static BoolConverters.Not}"/>
+          <Binding Path="CommitMessage" Converter="{x:Static c:StringConverters.IsNotNullOrWhitespace}"/>
+        </MultiBinding>
+      </Button.IsEnabled>
+    </Button>
     <Button Width="0" Height="0" Background="Transparent" Click="OnCommitWithAutoStage" HotKey="{OnPlatform Ctrl+Shift+Enter, macOS=⌘+Shift+Enter}">
       <Button.IsEnabled>
         <MultiBinding Converter="{x:Static BoolConverters.And}">
@@ -269,5 +436,7 @@
         </MultiBinding>
       </Button.IsEnabled>
     </Button>
+    <Button Width="0" Height="0" Background="Transparent" Click="OnStageAllByHotKey" HotKey="{OnPlatform Ctrl+Shift+S, macOS=⌘+Shift+S}"/>
+    <Button Width="0" Height="0" Background="Transparent" Click="OnUnstageAllByHotKey" HotKey="{OnPlatform Ctrl+Shift+U, macOS=⌘+Shift+U}"/>
   </Grid>
 </UserControl>

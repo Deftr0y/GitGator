@@ -5,17 +5,35 @@
 A free, open-source Git GUI focused on Ubuntu and Linux, starting from
 [SourceGit](https://github.com/sourcegit-scm/sourcegit) under the MIT license.
 
-This is an initial development baseline, version 0.1.0. The Simple Fork workspace
-uses PeerBrush's website-inspired warm dark colors, compact navigation and
-hierarchical file trees. Repositories open in tabs; there is no workspace
-switcher or tab-search interface. The new tab centers Clone, Open and Terminal
-actions above repository search and the saved repository list.
-Changes, Staged Changes and the commit form share one workspace. File previews
-are hidden by default; use **Preview file** when you want to inspect a diff.
-Selecting files or folders alone does not load their content. Use Stage/Unstage
-or Space/Enter for selected files and folders; double-click a file to move it
-between Changes and Staged Changes.
-The main commit action commits staged files locally; Pull and Push remain separate.
+This is an initial development baseline, version 0.1.0. The interface assumes
+you work with an AI assistant: it shows what you need to decide and keeps the
+technical tools one click away. Colors and shapes follow PeerBrush's warm dark
+website and Ubuntu's dark style.
+
+- **Header.** The branch pill shows where you are and switches or creates
+  branches. Next to it, one sentence says whether the branch is in sync
+  ("2 commits to push", "Up to date", "Only on this computer") and one button
+  offers the next step: Pull, Push, Publish branch, Add remote or Fetch. A
+  click runs it; Ctrl+click opens the dialog with every option. Fetch, Pull and
+  Push with options are also under **⋯**.
+- **Sidebar.** Changes, History and your local branches. Stashes, remotes, tags,
+  submodules and worktrees sit under **Advanced**, which stays closed until you
+  open it. Stashes also appears on its own while something is stashed.
+- **Changes.** One list of changed files, one message box, one button. With
+  nothing staged the button is **Commit all**. Select files and choose
+  **Stage selected** (or Space/Enter, or double-click) to commit only part of
+  the work; a **Staged for commit** list appears and the button becomes
+  **Commit staged**. **Write with AI** drafts the message from the staged
+  changes, staging everything first when nothing is staged; without a provider
+  it opens Preferences on the AI page. File previews stay hidden until you
+  choose **Preview**. Committing is local; Pull and Push remain separate.
+- **History.** Taller rows with message, author and time. The commit ID column
+  is off by default and can be turned back on from the column options. The
+  detail panel leads with author and message; ID, parents and refs follow as
+  reference lines.
+
+Repositories open in tabs. The new tab centers Clone, Open and Terminal actions
+above repository search and the saved repository list.
 
 GitGator inherits SourceGit's commit graph, branches, remotes, stash,
 merge/rebase, worktrees and optional AI commit-message generation. Less-used

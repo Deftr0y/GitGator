@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -37,6 +38,7 @@ namespace SourceGit.Views
             }
 
             UpdatePreviewLayout();
+            UpdateStagedLayout();
         }
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -51,6 +53,7 @@ namespace SourceGit.Views
             }
 
             UpdatePreviewLayout();
+            UpdateStagedLayout();
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -70,6 +73,27 @@ namespace SourceGit.Views
         {
             if (e.PropertyName == nameof(ViewModels.WorkingCopy.IsPreviewVisible))
                 UpdatePreviewLayout();
+            else if (e.PropertyName == nameof(ViewModels.WorkingCopy.Staged))
+                UpdateStagedLayout();
+        }
+
+        // The staged list only takes room once something has been staged.
+        private void UpdateStagedLayout()
+        {
+            if (ChangesLayout == null)
+                return;
+
+            var hasStaged = _workingCopy is { Staged.Count: > 0 };
+            if (hasStaged == _isStagedPanelShown)
+                return;
+
+            _isStagedPanelShown = hasStaged;
+
+            var rows = ChangesLayout.RowDefinitions;
+            rows[2].Height = new GridLength(hasStaged ? 1.35 : 1, GridUnitType.Star);
+            rows[3].Height = new GridLength(hasStaged ? 4 : 0);
+            rows[4].MinHeight = hasStaged ? 110 : 0;
+            rows[4].Height = hasStaged ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
         }
 
         private void UpdatePreviewLayout()
@@ -92,6 +116,7 @@ namespace SourceGit.Views
         }
 
         private ViewModels.WorkingCopy _workingCopy;
+        private bool _isStagedPanelShown = false;
 
         private async void OnOpenAssumeUnchanged(object sender, RoutedEventArgs e)
         {
@@ -327,6 +352,103 @@ namespace SourceGit.Views
                 await vm.CommitAsync(false, false);
 
             e.Handled = true;
+        }
+
+        private async void OnCommitByHotKey(object _, RoutedEventArgs e)
+        {
+            if (App.GetLauncher() is { CommandPalette: { } } launcher)
+                return;
+
+            // Same choice the visible button makes: everything when nothing is staged.
+            if (IsEffectivelyVisible && DataContext is ViewModels.WorkingCopy vm)
+                await vm.CommitAsync(vm is { Staged.Count: 0, UseAmend: false, InProgressContext: null }, false);
+
+            e.Handled = true;
+        }
+
+        private async void OnStageAllByHotKey(object _, RoutedEventArgs e)
+        {
+            if (IsEffectivelyVisible && DataContext is ViewModels.WorkingCopy vm)
+                await vm.StageChangesAsync(vm.VisibleUnstaged, null);
+
+            e.Handled = true;
+        }
+
+        private async void OnUnstageAllByHotKey(object _, RoutedEventArgs e)
+        {
+            if (IsEffectivelyVisible && DataContext is ViewModels.WorkingCopy vm)
+                await vm.UnstageChangesAsync(vm.VisibleStaged, null);
+
+            e.Handled = true;
+        }
+
+        private void OnAmendLastCommit(object _, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.WorkingCopy vm)
+                vm.UseAmend = true;
+
+            e.Handled = true;
+        }
+
+        private async void OnWriteWithAI(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+
+            var repoView = this.FindAncestorOfType<Repository>();
+            if (repoView is not { DataContext: ViewModels.Repository repo } || DataContext is not ViewModels.WorkingCopy vm)
+                return;
+
+            var services = repo.GetPreferredOpenAIServices();
+            if (services.Count == 0)
+            {
+                // No provider yet: take the user straight to where one is added.
+                if (TopLevel.GetTopLevel(this) is Window owner)
+                {
+                    var preferences = new Preferences();
+                    preferences.SelectAITab();
+                    await preferences.ShowDialog(owner);
+                }
+
+                return;
+            }
+
+            // The assistant reads staged changes. With nothing staged it gets everything, like "Commit all".
+            if (vm.Staged.Count == 0)
+            {
+                if (vm.Unstaged.Count == 0)
+                    return;
+
+                await vm.StageChangesAsync(vm.Unstaged, null);
+                for (var i = 0; i < 50 && vm.Staged.Count == 0; i++)
+                    await Task.Delay(100);
+
+                if (vm.Staged.Count == 0)
+                    return;
+            }
+
+            if (services.Count == 1)
+            {
+                DoOpenAIAssistant(repo, services[0], vm.Staged);
+                return;
+            }
+
+            var menu = new ContextMenu();
+            menu.Placement = PlacementMode.TopEdgeAlignedLeft;
+            foreach (var service in services)
+            {
+                var dup = service;
+                var item = new MenuItem();
+                item.Header = service.Name;
+                item.Click += (_, ev) =>
+                {
+                    DoOpenAIAssistant(repo, dup, vm.Staged);
+                    ev.Handled = true;
+                };
+                menu.Items.Add(item);
+            }
+
+            if (sender is Control anchor)
+                menu.Open(anchor);
         }
 
         private async void OnCommitWithAutoStage(object _, RoutedEventArgs e)

@@ -42,7 +42,7 @@
 
     <!-- Body -->
     <Border Grid.Row="1">
-      <TabControl Classes="settings_tabs" TabStripPlacement="Left">
+      <TabControl x:Name="SettingsTabs" Classes="settings_tabs" TabStripPlacement="Left">
         <TabItem>
           <TabItem.Header>
             <TextBlock Classes="tab_header" Text="{DynamicResource Text.Preferences.General}"/>

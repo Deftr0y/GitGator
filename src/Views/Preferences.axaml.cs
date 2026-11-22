@@ -129,6 +129,12 @@ namespace SourceGit.Views
             set => SetAndRaise(SelectedCustomActionProperty, ref _selectedCustomAction, value);
         }
 
+        // Opens on the AI providers page (the last tab).
+        public void SelectAITab()
+        {
+            SettingsTabs.SelectedIndex = SettingsTabs.ItemCount - 1;
+        }
+
         public Preferences()
         {
             var pref = ViewModels.Preferences.Instance;
