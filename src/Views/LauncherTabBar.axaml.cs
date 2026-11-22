@@ -346,39 +346,6 @@ namespace SourceGit.Views
                     };
                     menu.Items.Add(edit);
 
-                    var workspaces = ViewModels.Preferences.Instance.Workspaces;
-                    if (workspaces.Count > 1)
-                    {
-                        var moveTo = new MenuItem();
-                        moveTo.Header = App.Text("PageTabBar.Tab.MoveToWorkspace");
-                        moveTo.Icon = this.CreateMenuIcon("Icons.MoveTo");
-
-                        foreach (var ws in workspaces)
-                        {
-                            var dupWs = ws;
-                            var isCurrent = dupWs == vm.ActiveWorkspace;
-                            var icon = this.CreateMenuIcon(isCurrent ? "Icons.Check" : "Icons.Workspace");
-                            icon.Fill = dupWs.Brush;
-
-                            var target = new MenuItem();
-                            target.Header = ws.Name;
-                            target.Icon = icon;
-                            target.Click += (_, ev) =>
-                            {
-                                if (!isCurrent)
-                                {
-                                    vm.CloseTab(page);
-                                    dupWs.Repositories.Add(repo.FullPath);
-                                }
-
-                                ev.Handled = true;
-                            };
-                            moveTo.Items.Add(target);
-                        }
-
-                        menu.Items.Add(moveTo);
-                    }
-
                     menu.Items.Add(new MenuItem() { Header = "-" });
                 }
 

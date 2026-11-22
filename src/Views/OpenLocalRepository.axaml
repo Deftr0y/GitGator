@@ -5,51 +5,78 @@
              xmlns:vm="using:SourceGit.ViewModels"
              xmlns:v="using:SourceGit.Views"
              xmlns:c="using:SourceGit.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             d:DesignHeight="450"
              x:Class="SourceGit.Views.OpenLocalRepository"
              x:DataType="vm:OpenLocalRepository">
-  <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+  <StackPanel Orientation="Vertical" Margin="8,0">
     <StackPanel Orientation="Horizontal">
-      <Path Width="16" Height="16"
-            Margin="0,2,0,0"
-            Data="{StaticResource Icons.Folder.Open}"/>
-
-      <TextBlock FontSize="18"
-                 Margin="8,0,0,0"
-                 Classes="bold"
-                 Text="{DynamicResource Text.OpenLocalRepository}"/>
+      <Path Width="16" Height="16" Margin="0" Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.Accent}"/>
+      <TextBlock FontSize="16" Margin="8,0,0,0" Text="{DynamicResource Text.OpenLocalRepository}" FontWeight="SemiBold"/>
     </StackPanel>
-
-    <Grid Margin="8,16,0,0" RowDefinitions="32,32,32" ColumnDefinitions="Auto,*">
-      <TextBlock Grid.Row="0" Grid.Column="0"
-                 HorizontalAlignment="Right"
+    <TextBlock Text="Open a Git repository already stored on this computer."
+               FontSize="11"
+               Foreground="{DynamicResource Brush.FG2}"
+               TextWrapping="Wrap"
+               Margin="0,5,0,0"/>
+    <Grid Margin="0,14,0,0" RowDefinitions="34,28,34,30" ColumnDefinitions="120,*">
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.OpenLocalRepository.Path}"/>
-      <TextBox Grid.Row="0" Grid.Column="1"
-               Height="28"
-               CornerRadius="3"
-               Text="{Binding RepoPath, Mode=TwoWay}">
+                 Text="{DynamicResource Text.OpenLocalRepository.Path}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="0"
+               Grid.Column="1"
+               Height="30"
+               CornerRadius="4"
+               Text="{Binding RepoPath, Mode=TwoWay}"
+               VerticalContentAlignment="Center"
+               Watermark="/home/you/Projects/my-project">
         <TextBox.InnerRightContent>
-          <Button Classes="icon_button" Width="28" Height="28" Margin="4,0,0,0" Click="OnSelectRepositoryFolder">
+          <Button Classes="icon_button"
+                  Width="28"
+                  Height="28"
+                  Margin="4,0,0,0"
+                  Click="OnSelectRepositoryFolder"
+                  ToolTip.Tip="Choose a repository folder">
             <Path Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.FG1}"/>
           </Button>
         </TextBox.InnerRightContent>
       </TextBox>
-
-      <TextBlock Grid.Row="1" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <Border Grid.Row="1"
+              Grid.ColumnSpan="2"
+              Margin="0,4,0,0"
+              Padding="0,8,0,3"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource Brush.Border2}">
+        <TextBlock Text="Add to GitGator" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
+      </Border>
+      <TextBlock Grid.Row="2"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.OpenLocalRepository.Group}"/>
-      <ComboBox Grid.Row="1" Grid.Column="1"
-                Height="28" Padding="8,0"
-                VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                 Text="{DynamicResource Text.OpenLocalRepository.Group}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <ComboBox Grid.Row="2"
+                Grid.Column="1"
+                Height="30"
+                Padding="8,0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Groups}"
                 SelectedIndex="{Binding SelectedGroupIndex, Mode=TwoWay}">
         <ComboBox.ItemTemplate>
           <DataTemplate DataType="vm:TargetGroup">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Grid.Column="0"
-                         Text="{Binding Name, Mode=OneWay}"/>
+              <TextBlock Grid.Column="0" Text="{Binding Name, Mode=OneWay}"/>
               <TextBlock Grid.Column="1"
                          Text="{Binding Description, Mode=OneWay}"
                          Margin="8,0,0,0"
@@ -58,13 +85,19 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-
-      <TextBlock Grid.Row="2" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <TextBlock Grid.Row="3"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.OpenLocalRepository.Bookmark}"/>
-      <v:BookmarkSelector Grid.Row="2" Grid.Column="1"
-                          HorizontalAlignment="Left" VerticalAlignment="Center"
+                 Text="{DynamicResource Text.OpenLocalRepository.Bookmark}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <v:BookmarkSelector Grid.Row="3"
+                          Grid.Column="1"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
                           Bookmark="{Binding Bookmark, Mode=TwoWay}"/>
     </Grid>
   </StackPanel>

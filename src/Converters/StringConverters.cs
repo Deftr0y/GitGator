@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -97,17 +97,14 @@ namespace SourceGit.Converters
         {
             public object Convert(IList<object> values, Type targetType, object parameter, CultureInfo culture)
             {
-                if (values is not { Count: 2 })
+                if (values is not { Count: > 0 })
                     return "GitGator";
 
                 var page = values[0] as string;
-                var workspace = values[1] as string;
                 if (string.IsNullOrEmpty(page))
                     page = "Repositories";
-                if (string.IsNullOrEmpty(workspace))
-                    workspace = "Unnamed";
 
-                return $"{page} - {workspace}";
+                return $"{page} — GitGator";
             }
 
             public IList<object> ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

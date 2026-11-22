@@ -81,7 +81,7 @@ namespace SourceGit.Native
         {
             get;
             set;
-        } = "manager";
+        } = string.Empty;
 
         public static string ShellOrTerminal
         {

@@ -32,7 +32,7 @@
                              TotalCommits="{Binding Commits.Count, Mode=OneWay}"
                              SelectedCommits="{Binding SelectedCommits, Mode=TwoWay}"
                              ColumnHeaderHeight="24"
-                             RowHeight="26"
+                             RowHeight="24"
                              LayoutUpdated="OnCommitListLayoutUpdated"
                              ContextRequested="OnCommitListContextRequested"
                              DoubleTapped="OnCommitListDoubleTapped">
@@ -106,7 +106,7 @@
           <DataGridTemplateColumn Width="*" IsReadOnly="True">
             <DataGridTemplateColumn.Header>
               <Border Padding="48,0">
-                <TextBlock Classes="table_header" Text="{DynamicResource Text.Histories.Header.GraphAndSubject}" HorizontalAlignment="Center"/>
+                <TextBlock Classes="table_header" Text="Commits" HorizontalAlignment="Center"/>
               </Border>
             </DataGridTemplateColumn.Header>
 
@@ -137,7 +137,7 @@
                                            HasSingleRemote="{Binding $parent[v:Histories].HasSingleRemote}"/>
 
                     <v:CommitSubjectPresenter Grid.Column="3"
-                                              Height="26"
+                                              Height="24"
                                               FontFamily="{DynamicResource Fonts.Default}"
                                               FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize}"
                                               CodeFontFamily="{DynamicResource Fonts.Monospace}"
@@ -157,7 +157,7 @@
 
           <DataGridTemplateColumn MinWidth="80" IsReadOnly="True" IsVisible="{Binding IsAuthorColumnVisible, Mode=OneWay}">
             <DataGridTemplateColumn.Header>
-              <TextBlock Classes="table_header" Text="{DynamicResource Text.Histories.Header.Author}" HorizontalAlignment="Center"/>
+              <TextBlock Classes="table_header" Text="Author" HorizontalAlignment="Center"/>
             </DataGridTemplateColumn.Header>
 
             <DataGridTemplateColumn.CellTemplate>
@@ -185,7 +185,7 @@
 
           <DataGridTemplateColumn MinWidth="100" IsReadOnly="True" IsVisible="{Binding IsSHAColumnVisible, Mode=OneWay}">
             <DataGridTemplateColumn.Header>
-              <TextBlock Classes="table_header" Text="{DynamicResource Text.Histories.Header.SHA}" HorizontalAlignment="Center"/>
+              <TextBlock Classes="table_header" Text="Commit" HorizontalAlignment="Center"/>
             </DataGridTemplateColumn.Header>
 
             <DataGridTemplateColumn.CellTemplate>
@@ -202,7 +202,7 @@
 
           <DataGridTemplateColumn MinWidth="160" IsReadOnly="True" IsVisible="{Binding IsAuthorTimeColumnVisible, Mode=OneWay}">
             <DataGridTemplateColumn.Header>
-              <TextBlock Classes="table_header" Text="{DynamicResource Text.Histories.Header.AuthorTime}" HorizontalAlignment="Center"/>
+              <TextBlock Classes="table_header" Text="Authored" HorizontalAlignment="Center"/>
             </DataGridTemplateColumn.Header>
 
             <DataGridTemplateColumn.CellTemplate>
@@ -222,7 +222,7 @@
 
           <DataGridTemplateColumn MinWidth="160" IsReadOnly="True" IsVisible="{Binding IsCommitTimeColumnVisible, Mode=OneWay}">
             <DataGridTemplateColumn.Header>
-              <TextBlock Classes="table_header" Text="{DynamicResource Text.Histories.Header.CommitTime}" HorizontalAlignment="Center"/>
+              <TextBlock Classes="table_header" Text="Committed" HorizontalAlignment="Center"/>
             </DataGridTemplateColumn.Header>
 
             <DataGridTemplateColumn.CellTemplate>
@@ -286,10 +286,10 @@
 
       <Border Width="28" Height="28"
               Margin="0,0,16,8"
-              CornerRadius="14"
+              CornerRadius="5"
               Background="{DynamicResource Brush.Popup}"
               HorizontalAlignment="Right" VerticalAlignment="Bottom"
-              Effect="drop-shadow(0 0 8 #80000000)"
+              BorderThickness="1" BorderBrush="{DynamicResource Brush.Border2}" ToolTip.Tip="Back to latest commit"
               PointerPressed="OnScrollToTopPointerPressed"
               IsVisible="{Binding $parent[v:Histories].IsScrollToTopVisible}">
         <Path Width="12" Height="12"
@@ -298,7 +298,17 @@
               Opacity=".8"/>
       </Border>
 
-      <v:LoadingIcon Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoading}"/>
+      <TextBlock Text="No commits to show" Foreground="{DynamicResource Brush.FG2}"
+                 HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+        <TextBlock.IsVisible>
+          <MultiBinding Converter="{x:Static BoolConverters.And}">
+            <Binding Path="Commits" Converter="{x:Static c:ListConverters.IsNullOrEmpty}"/>
+            <Binding Path="IsLoading" Converter="{x:Static BoolConverters.Not}"/>
+          </MultiBinding>
+        </TextBlock.IsVisible>
+      </TextBlock>
+
+      <v:LoadingIcon Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoading}"/>
     </Grid>
 
     <GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
@@ -313,38 +323,30 @@
       <ContentControl Content="{Binding DetailContext, Mode=OneWay}">
         <ContentControl.DataTemplates>
           <DataTemplate DataType="m:Null">
-            <TabControl Padding="0,4">
+            <TabControl Padding="0,2">
                 <TabItem>
                   <TabItem.Header>
                     <Border Background="Transparent" PointerPressed="OnTabHeaderPointerPressed">
-                      <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Info}"/>
+                      <TextBlock Classes="tab_header" Text="Overview"/>
                     </Border>
                   </TabItem.Header>
 
-                  <Grid IsVisible="{Binding #ThisControl.IsDetailsPanelExpanded, Mode=OneWay}">
-                    <Path Width="128" Height="128"
-                          Data="{StaticResource Icons.Detail}"
-                          HorizontalAlignment="Center"
-                          Fill="{DynamicResource Brush.FG2}"/>
-
-                    <StackPanel Margin="0,8" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                      <Path Width="12" Height="12" VerticalAlignment="Center" Data="{StaticResource Icons.Info}" Fill="{DynamicResource Brush.FG2}"/>
-                      <TextBlock Margin="4,0" Text="{DynamicResource Text.Histories.Tips.Prefix}" FontWeight="Bold" Foreground="{DynamicResource Brush.FG2}"/>
-                      <TextBlock Text="{DynamicResource Text.Histories.Tips}" Foreground="{DynamicResource Brush.FG2}" IsVisible="{OnPlatform True, macOS=False}"/>
-                      <TextBlock Text="{DynamicResource Text.Histories.Tips.MacOS}" Foreground="{DynamicResource Brush.FG2}" IsVisible="{OnPlatform False, macOS=True}"/>
-                    </StackPanel>
-                  </Grid>
+                  <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                              IsVisible="{Binding #ThisControl.IsDetailsPanelExpanded, Mode=OneWay}">
+                    <Path Width="24" Height="24" Data="{StaticResource Icons.Commit}" Fill="{DynamicResource Brush.FG2}"/>
+                    <TextBlock Text="Select a commit" Foreground="{DynamicResource Brush.FG2}"/>
+                  </StackPanel>
                 </TabItem>
 
                 <TabItem IsEnabled="False">
                   <TabItem.Header>
-                    <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Changes}"/>
+                    <TextBlock Classes="tab_header" Text="Changes"/>
                   </TabItem.Header>
                 </TabItem>
 
                 <TabItem IsEnabled="False">
                   <TabItem.Header>
-                    <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Files}"/>
+                    <TextBlock Classes="tab_header" Text="Files"/>
                   </TabItem.Header>
                 </TabItem>
               </TabControl>
@@ -358,14 +360,14 @@
             <TabControl SelectedIndex="1" Padding="0">
               <TabItem IsEnabled="False">
                 <TabItem.Header>
-                  <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Info}"/>
+                  <TextBlock Classes="tab_header" Text="Overview"/>
                 </TabItem.Header>
               </TabItem>
 
               <TabItem>
                 <TabItem.Header>
                   <Border Background="Transparent" PointerPressed="OnTabHeaderPointerPressed">
-                    <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Changes}"/>
+                    <TextBlock Classes="tab_header" Text="Changes"/>
                   </Border>
                 </TabItem.Header>
 
@@ -374,18 +376,18 @@
 
               <TabItem IsEnabled="False">
                 <TabItem.Header>
-                  <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Files}"/>
+                  <TextBlock Classes="tab_header" Text="Files"/>
                 </TabItem.Header>
               </TabItem>
             </TabControl>
           </DataTemplate>
 
           <DataTemplate DataType="m:Count">
-            <TabControl Padding="0,4">
+            <TabControl Padding="0,2">
               <TabItem>
                 <TabItem.Header>
                   <Border Background="Transparent" PointerPressed="OnTabHeaderPointerPressed">
-                    <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Info}"/>
+                    <TextBlock Classes="tab_header" Text="Overview"/>
                   </Border>
                 </TabItem.Header>
 
@@ -393,14 +395,14 @@
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             IsVisible="{Binding #ThisControl.IsDetailsPanelExpanded, Mode=OneWay}">
 
-                  <Path Width="128" Height="128"
+                  <Path Width="28" Height="28"
                         Data="{StaticResource Icons.Detail}"
                         HorizontalAlignment="Center"
                         Fill="{DynamicResource Brush.FG2}"/>
 
                   <TextBlock HorizontalAlignment="Center"
                              Margin="0,16"
-                             FontSize="24" FontWeight="Bold"
+                             FontSize="14" FontWeight="SemiBold"
                              Foreground="{DynamicResource Brush.FG2}"
                              Text="{Binding Value, Converter={x:Static c:StringConverters.FormatByResourceKey}, ConverterParameter='Histories.Selected'}"/>
                 </StackPanel>
@@ -408,13 +410,13 @@
 
               <TabItem IsEnabled="False">
                 <TabItem.Header>
-                  <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Changes}"/>
+                  <TextBlock Classes="tab_header" Text="Changes"/>
                 </TabItem.Header>
               </TabItem>
 
               <TabItem IsEnabled="False">
                 <TabItem.Header>
-                  <TextBlock Classes="tab_header" Text="{DynamicResource Text.CommitDetail.Files}"/>
+                  <TextBlock Classes="tab_header" Text="Files"/>
                 </TabItem.Header>
               </TabItem>
             </TabControl>

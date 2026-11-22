@@ -165,10 +165,11 @@ namespace SourceGit.Commands
             if (useSetSid)
                 builder.Append(Native.OS.GitExecutable.Quoted()).Append(' ');
 
-            builder
-                .Append("--no-pager -c core.quotepath=off -c credential.helper=")
-                .Append(Native.OS.CredentialHelper)
-                .Append(' ');
+            builder.Append("--no-pager -c core.quotepath=off ");
+
+            // Inherit Git's configured credentials unless a helper was explicitly selected.
+            if (!string.IsNullOrEmpty(Native.OS.CredentialHelper))
+                builder.Append("-c credential.helper=").Append(Native.OS.CredentialHelper.Quoted()).Append(' ');
 
             switch (Editor)
             {

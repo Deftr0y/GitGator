@@ -4,28 +4,37 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:m="using:SourceGit.Models"
              xmlns:vm="using:SourceGit.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="500"
+             d:DesignHeight="450"
              x:Class="SourceGit.Views.Fetch"
              x:DataType="vm:Fetch">
   <StackPanel Orientation="Vertical" Margin="8,0">
     <StackPanel Orientation="Horizontal">
-      <Path Width="16" Height="16"
-            Data="{StaticResource Icons.Fetch}"/>
-
-      <TextBlock FontSize="18"
-                 Margin="8,0,0,0"
-                 Classes="bold"
-                 Text="{DynamicResource Text.Fetch.Title}"/>
+      <Path Width="16" Height="16" Data="{StaticResource Icons.Fetch}" Fill="{DynamicResource Brush.Accent}" Margin="0"/>
+      <TextBlock FontSize="16" Margin="8,0,0,0" Text="{DynamicResource Text.Fetch.Title}" FontWeight="SemiBold"/>
     </StackPanel>
-
-    <Grid Margin="0,16,0,0" RowDefinitions="32,32,Auto,32" ColumnDefinitions="120,*">
-      <TextBlock Grid.Row="0" Grid.Column="0"
-                 HorizontalAlignment="Right" VerticalAlignment="Center"
+    <TextBlock Text="Refresh remote branches without changing your working files."
+               FontSize="11"
+               Foreground="{DynamicResource Brush.FG2}"
+               TextWrapping="Wrap"
+               Margin="0,5,0,0"/>
+    <Grid Margin="0,14,0,0" RowDefinitions="34,28,Auto,30,30,Auto" ColumnDefinitions="120,*">
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Center"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Fetch.Remote}"/>
-      <ComboBox Grid.Row="0" Grid.Column="1"
-                Height="28" Padding="8,0"
-                VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                 Text="{DynamicResource Text.Fetch.Remote}"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <ComboBox Grid.Row="0"
+                Grid.Column="1"
+                Height="30"
+                Padding="8,0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Remotes}"
                 SelectedItem="{Binding SelectedRemote, Mode=TwoWay}">
         <ComboBox.IsEnabled>
@@ -43,23 +52,43 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-
-      <CheckBox Grid.Row="1" Grid.Column="1"
-                Content="{DynamicResource Text.Fetch.Force}"
-                IsChecked="{Binding Force, Mode=TwoWay}"
-                ToolTip.Tip="--force"/>
-
-      <CheckBox Grid.Row="2" Grid.Column="1"
-                Height="32"
+      <Border Grid.Row="1"
+              Grid.ColumnSpan="2"
+              Margin="0,4,0,0"
+              Padding="0,8,0,3"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource Brush.Border2}">
+        <TextBlock Text="Fetch options" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
+      </Border>
+      <CheckBox Grid.Row="2"
+                Grid.Column="1"
+                Height="30"
                 Content="{DynamicResource Text.Fetch.AllRemotes}"
                 IsChecked="{Binding FetchAllRemotes, Mode=TwoWay}"
                 IsVisible="{Binding IsFetchAllRemoteVisible, Mode=OneWay}"
-                ToolTip.Tip="--all"/>
-
-      <CheckBox Grid.Row="3" Grid.Column="1"
+                ToolTip.Tip="Fetch every configured remote"
+                MinHeight="28"/>
+      <CheckBox Grid.Row="3"
+                Grid.Column="1"
                 Content="{DynamicResource Text.Fetch.NoTags}"
                 IsChecked="{Binding NoTags, Mode=TwoWay}"
-                ToolTip.Tip="--no-tags"/>
+                ToolTip.Tip="Update branches without downloading tags"
+                MinHeight="28"/>
+      <CheckBox Grid.Row="4"
+                Grid.Column="1"
+                Content="{DynamicResource Text.Fetch.Force}"
+                IsChecked="{Binding Force, Mode=TwoWay}"
+                ToolTip.Tip="Allow fetched references to replace local references"
+                MinHeight="28"
+                x:Name="ForceFetchOption"/>
+      <TextBlock Text="Fetched references may replace your existing local references."
+                 Grid.Row="5"
+                 Grid.Column="1"
+                 FontSize="11"
+                 Foreground="{DynamicResource Brush.Warning}"
+                 TextWrapping="Wrap"
+                 Margin="0,3,0,5"
+                 IsVisible="{Binding #ForceFetchOption.IsChecked}"/>
     </Grid>
   </StackPanel>
 </UserControl>

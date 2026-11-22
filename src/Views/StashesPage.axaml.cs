@@ -4,6 +4,7 @@ using System.Text;
 
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 
 namespace SourceGit.Views
@@ -22,10 +23,18 @@ namespace SourceGit.Views
 
             var layout = ViewModels.Preferences.Instance.Layout;
             var width = grid.Bounds.Width;
-            var leftWidth = Math.Max(width - 304, 300);
+            var leftWidth = Math.Max(width - 324, 260);
 
             if (layout.StashesLeftWidth.Value - leftWidth > 1.0)
                 layout.StashesLeftWidth = new GridLength(leftWidth, GridUnitType.Pixel);
+        }
+
+        private void OnApplySelectedStash(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.StashesPage { SelectedStash: { } stash } vm)
+                vm.Apply(stash);
+
+            e.Handled = true;
         }
 
         private async void OnStashListKeyDown(object sender, KeyEventArgs e)

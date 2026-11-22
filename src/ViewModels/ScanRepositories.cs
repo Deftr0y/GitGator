@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -34,10 +34,6 @@ namespace SourceGit.ViewModels
         public ScanRepositories()
         {
             ScanDirs = new List<Models.ScanDir>();
-
-            var workspace = Preferences.Instance.GetActiveWorkspace();
-            if (!string.IsNullOrEmpty(workspace.DefaultCloneDir))
-                ScanDirs.Add(new Models.ScanDir(workspace.DefaultCloneDir, "Workspace"));
 
             if (!string.IsNullOrEmpty(Preferences.Instance.GitDefaultCloneDir))
                 ScanDirs.Add(new Models.ScanDir(Preferences.Instance.GitDefaultCloneDir, "Global"));

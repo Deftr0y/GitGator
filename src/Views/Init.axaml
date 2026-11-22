@@ -3,45 +3,37 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:SourceGit.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             d:DesignHeight="450"
              x:Class="SourceGit.Views.Init"
              x:DataType="vm:Init">
-  <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+  <StackPanel Orientation="Vertical" Margin="8,0">
     <StackPanel Orientation="Horizontal">
-      <Path Width="16" Height="16"
-            Data="{StaticResource Icons.Init}"/>
-
-      <TextBlock FontSize="18"
-                 Margin="8,0,0,0"
-                 Classes="bold"
-                 Text="{DynamicResource Text.Init}"/>
+      <Path Width="16" Height="16" Data="{StaticResource Icons.Init}" Fill="{DynamicResource Brush.Accent}"/>
+      <TextBlock FontSize="16" Margin="8,0,0,0" Text="{DynamicResource Text.Init}" FontWeight="SemiBold"/>
     </StackPanel>
-
-    <Grid Margin="0,16,8,0" ColumnDefinitions="100,*">
+    <TextBlock Text="Start a local Git history in this folder." FontSize="11" Foreground="{DynamicResource Brush.FG2}" Margin="0,5,0,0"/>
+    <Grid Margin="0,14,0,0" ColumnDefinitions="64,*">
       <Grid.RowDefinitions>
-        <RowDefinition Height="32"/>
-        <RowDefinition Height="Auto" MinHeight="32"/>
-        <RowDefinition Height="Auto" MinHeight="32"/>
+        <RowDefinition Height="Auto" MinHeight="34"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-
-      <TextBlock Grid.Row="0" Grid.Column="0"
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
                  Text="{DynamicResource Text.Init.Path}"
-                 HorizontalAlignment="Right" VerticalAlignment="Center"
-                 Margin="0,0,8,0"/>
-      <TextBlock Grid.Row="0" Grid.Column="1"
-                 Text="{Binding TargetPath}"/>
-
-      <TextBlock Grid.Row="1" Grid.Column="1"
+                 HorizontalAlignment="Left"
+                 VerticalAlignment="Center"
+                 Margin="0,0,8,0"
                  Foreground="{DynamicResource Brush.FG2}"
-                 TextWrapping="Wrap">
+                 FontSize="12"/>
+      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TargetPath}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+      <TextBlock Grid.Row="1" Grid.Column="1" Foreground="{DynamicResource Brush.FG2}" TextWrapping="Wrap" FontSize="11" Margin="0,8,0,0">
         <Run Text="{DynamicResource Text.Init.ErrorMessageTip}"/>
-        <Run Text="{Binding Reason, Mode=OneWay}" />
+        <Run Text="{Binding Reason, Mode=OneWay}"/>
       </TextBlock>
-
-      <TextBlock Grid.Row="2" Grid.Column="1"
-                 Margin="0,8,0,0"
-                 Text="{DynamicResource Text.Init.CommandTip}"
-                 TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,12,0,0" Text="{DynamicResource Text.Init.CommandTip}" TextWrapping="Wrap"/>
     </Grid>
   </StackPanel>
 </UserControl>

@@ -9,45 +9,96 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="SourceGit.Views.Welcome"
              x:DataType="vm:Welcome">
-  <Grid RowDefinitions="*,Auto" Margin="8">
+  <UserControl.Styles>
+    <Style Selector="Button.home_action">
+      <Setter Property="Height" Value="84"/>
+      <Setter Property="Padding" Value="16,12"/>
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.SubPanel}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border2}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+    <Style Selector="Button.home_action:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.FlatButton.BackgroundHovered}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    <Style Selector="Button.home_action:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    <Style Selector="Button.home_primary">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrush}"/>
+    </Style>
+    <Style Selector="Button.home_primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}"/>
+    </Style>
+  </UserControl.Styles>
+  <Grid RowDefinitions="*,Auto" Margin="24,12,24,16">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="1*"/>
-      <ColumnDefinition Width="2*" MinWidth="600"/>
+      <ColumnDefinition Width="3*" MinWidth="680" MaxWidth="800"/>
       <ColumnDefinition Width="1*"/>
     </Grid.ColumnDefinitions>
 
     <!-- Managed Repositories -->
-    <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,Auto,*">
+    <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,Auto,Auto,Auto,*">
       <!-- App identity -->
-      <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,8,0,16"
-                  HorizontalAlignment="Left" Spacing="12">
-        <Image Width="56" Height="56" Source="/Resources/Images/gitgator.png"/>
-        <TextBlock Classes="bold" FontSize="28" VerticalAlignment="Center">
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,24,0,24"
+                  HorizontalAlignment="Center" Spacing="10">
+        <Image Width="72" Height="72" Source="/Resources/Images/gitgator.png"/>
+        <TextBlock FontWeight="SemiBold" FontSize="40" VerticalAlignment="Center">
           <Run Text="Git"/><Run Text="Gator" Foreground="{StaticResource Brush.BrandOrange}"/>
         </TextBlock>
       </StackPanel>
 
+      <!-- Everyday actions live in the new tab, above the saved repository list. -->
+      <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12" Margin="0,0,0,24">
+        <Button Grid.Column="0" x:Name="CloneRepositoryButton" Classes="home_action" Command="{Binding Clone}"
+                ToolTip.Tip="Clone a repository · Ctrl+R" AutomationProperties.Name="Clone repository">
+          <Grid ColumnDefinitions="28,*" ColumnSpacing="12">
+            <Path Width="24" Height="24" Data="{StaticResource Icons.Clone}" Fill="{DynamicResource Brush.Accent}"/>
+            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+              <TextBlock Text="Clone repository" FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock Text="From a remote URL" FontSize="11" Foreground="{DynamicResource Brush.FG2}"/>
+            </StackPanel>
+          </Grid>
+        </Button>
+        <Button Grid.Column="1" x:Name="OpenRepositoryButton" Classes="home_action home_primary" Command="{Binding OpenLocalRepository}"
+                ToolTip.Tip="Open a local folder · Ctrl+L" AutomationProperties.Name="Open repository">
+          <Grid ColumnDefinitions="28,*" ColumnSpacing="12">
+            <Path Width="24" Height="24" Data="{StaticResource Icons.Folder.Open}" Fill="White"/>
+            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+              <TextBlock Text="Open repository" Foreground="White" FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock Text="Choose a local folder" FontSize="11" Foreground="White" Opacity="0.8"/>
+            </StackPanel>
+          </Grid>
+        </Button>
+        <Button Grid.Column="2" x:Name="OpenTerminalButton" Classes="home_action" Command="{Binding OpenTerminal}"
+                ToolTip.Tip="Open a terminal · Ctrl+`" AutomationProperties.Name="Open terminal">
+          <Grid ColumnDefinitions="28,*" ColumnSpacing="12">
+            <Path Width="24" Height="24" Data="{StaticResource Icons.Terminal}" Fill="{DynamicResource Brush.Accent}"/>
+            <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+              <TextBlock Text="Open terminal" FontSize="13" FontWeight="SemiBold"/>
+              <TextBlock Text="Use the command line" FontSize="11" Foreground="{DynamicResource Brush.FG2}"/>
+            </StackPanel>
+          </Grid>
+        </Button>
+      </Grid>
+
       <!-- Search Box -->
-      <TextBox Grid.Row="1"
+      <TextBox Grid.Row="2"
                x:Name="SearchBox"
-               Height="32"
+               Height="36"
                Padding="0"
-               CornerRadius="16"
+               CornerRadius="6"
                BorderBrush="{DynamicResource Brush.Border0}"
                BorderThickness="1"
                Background="{DynamicResource Brush.Contents}"
                Watermark="{DynamicResource Text.Welcome.Search}"
                VerticalContentAlignment="Center"
                Text="{Binding SearchFilter, Mode=TwoWay}">
-        <TextBox.Styles>
-          <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border0}"/>
-          </Style>
-          <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
-            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border0}"/>
-          </Style>
-        </TextBox.Styles>
-
         <TextBox.InnerLeftContent>
           <Path Width="16" Height="16" Margin="6,0,3,0" Data="{StaticResource Icons.Search}" Fill="{DynamicResource Brush.FG2}"/>
         </TextBox.InnerLeftContent>
@@ -67,10 +118,23 @@
         </TextBox.InnerRightContent>
       </TextBox>
 
+      <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,16,0,3">
+        <TextBlock Text="Repositories" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
+        <Button Grid.Column="1" Classes="icon_button" Width="26" Height="24" ToolTip.Tip="Repository list options">
+          <Path Width="14" Height="14" Data="{StaticResource Icons.More}"/>
+          <Button.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedRight">
+              <MenuItem Header="{DynamicResource Text.Welcome.AddRootFolder}" Command="{Binding AddRootNode}"/>
+              <MenuItem Header="{DynamicResource Text.Welcome.ScanDefaultCloneDir}" Command="{Binding ScanDefaultCloneDir}"/>
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+      </Grid>
+
       <!-- Repository Tree -->
-      <v:RepositoryListBox Grid.Row="2"
+      <v:RepositoryListBox Grid.Row="4"
                            x:Name="TreeContainer"
-                           Margin="0,8,8,0"
+                           Margin="0,3,0,0"
                            Focusable="True"
                            Background="Transparent"
                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -218,6 +282,10 @@
           </DataTemplate>
         </ListBox.ItemTemplate>
       </v:RepositoryListBox>
+      <TextBlock Grid.Row="4" Text="No repositories to show" Foreground="{DynamicResource Brush.FG2}"
+                 HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,28,0,0" IsHitTestVisible="False"
+                 IsVisible="{Binding Rows.Count, Converter={x:Static c:IntConverters.IsZero}}"/>
+
     </Grid>
 
     <!-- Tips -->

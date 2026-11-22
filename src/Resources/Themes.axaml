@@ -33,45 +33,45 @@
       <Color x:Key="Color.InlineCode">#FFE4E4E4</Color>
       <Color x:Key="Color.InlineCodeFG">Black</Color>
       <Color x:Key="Color.SubPanel">#FFFBFBFB</Color>
-      <Color x:Key="Color.AccentSurface">#FFF0DDEB</Color>
+      <Color x:Key="Color.AccentSurface">#0DE95420</Color>
       <Color x:Key="Color.Success">#FF257447</Color>
       <Color x:Key="Color.Warning">#FF8D5909</Color>
       <Color x:Key="Color.Danger">#FFB52E43</Color>
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Dark">
-      <Color x:Key="Color.Window">#FF282627</Color>
-      <Color x:Key="Color.WindowBorder">#FF4A4448</Color>
-      <Color x:Key="Color.TitleBar">#FF242124</Color>
-      <Color x:Key="Color.ToolBar">#FF302C2F</Color>
-      <Color x:Key="Color.Popup">#FF332F32</Color>
-      <Color x:Key="Color.PopupBorder">#FF50484E</Color>
-      <Color x:Key="Color.Contents">#FF211F21</Color>
-      <Color x:Key="Color.Badge">#FF4B394C</Color>
-      <Color x:Key="Color.BadgeFG">#FFF1DDEE</Color>
+      <Color x:Key="Color.Window">#FF161417</Color>
+      <Color x:Key="Color.WindowBorder">#1FFFFFFF</Color>
+      <Color x:Key="Color.TitleBar">#FF161417</Color>
+      <Color x:Key="Color.ToolBar">#FF1B191C</Color>
+      <Color x:Key="Color.Popup">#FF201D21</Color>
+      <Color x:Key="Color.PopupBorder">#1FFFFFFF</Color>
+      <Color x:Key="Color.Contents">#FF161417</Color>
+      <Color x:Key="Color.Badge">#14FFFFFF</Color>
+      <Color x:Key="Color.BadgeFG">#FFF5F2F0</Color>
       <Color x:Key="Color.Conflict">#FFF1BE62</Color>
-      <Color x:Key="Color.Conflict.Foreground">#FF211F21</Color>
+      <Color x:Key="Color.Conflict.Foreground">#FF161417</Color>
       <Color x:Key="Color.Conflict.MineBG">#403B8D7B</Color>
       <Color x:Key="Color.Conflict.TheirsBG">#40E95420</Color>
-      <Color x:Key="Color.Border0">#FF191719</Color>
-      <Color x:Key="Color.Border1">#FF69616A</Color>
-      <Color x:Key="Color.Border2">#FF484147</Color>
-      <Color x:Key="Color.FlatButton.Background">#FF393438</Color>
-      <Color x:Key="Color.FlatButton.BackgroundHovered">#FF474047</Color>
-      <Color x:Key="Color.FlatButton.FloatingBorder">#FF655A63</Color>
-      <Color x:Key="Color.FG1">#FFF2EDEF</Color>
-      <Color x:Key="Color.FG2">#FFB5ADB4</Color>
+      <Color x:Key="Color.Border0">#10FFFFFF</Color>
+      <Color x:Key="Color.Border1">#29FFFFFF</Color>
+      <Color x:Key="Color.Border2">#14FFFFFF</Color>
+      <Color x:Key="Color.FlatButton.Background">#0DFFFFFF</Color>
+      <Color x:Key="Color.FlatButton.BackgroundHovered">#14FFFFFF</Color>
+      <Color x:Key="Color.FlatButton.FloatingBorder">#26FFFFFF</Color>
+      <Color x:Key="Color.FG1">#FFF5F2F0</Color>
+      <Color x:Key="Color.FG2">#FFADA8AB</Color>
       <Color x:Key="Color.Diff.EmptyBG">#25000000</Color>
       <Color x:Key="Color.Diff.AddedBG">#8030523F</Color>
       <Color x:Key="Color.Diff.DeletedBG">#8061333A</Color>
       <Color x:Key="Color.Diff.AddedHighlight">#B03B7651</Color>
       <Color x:Key="Color.Diff.DeletedHighlight">#B093414E</Color>
-      <Color x:Key="Color.Diff.BlockBorderHighlight">#FFB482B1</Color>
-      <Color x:Key="Color.Link">#FFFFA47D</Color>
-      <Color x:Key="Color.InlineCode">#FF3D353D</Color>
-      <Color x:Key="Color.InlineCodeFG">#FFF4D7EA</Color>
-      <Color x:Key="Color.SubPanel">#FF2C282C</Color>
-      <Color x:Key="Color.AccentSurface">#FF4A3042</Color>
+      <Color x:Key="Color.Diff.BlockBorderHighlight">#FFE95420</Color>
+      <Color x:Key="Color.Link">#FFF2865E</Color>
+      <Color x:Key="Color.InlineCode">#0DFFFFFF</Color>
+      <Color x:Key="Color.InlineCodeFG">#FFF5F2F0</Color>
+      <Color x:Key="Color.SubPanel">#FF1B191C</Color>
+      <Color x:Key="Color.AccentSurface">#14FFFFFF</Color>
       <Color x:Key="Color.Success">#FF80C89B</Color>
       <Color x:Key="Color.Warning">#FFF1BE62</Color>
       <Color x:Key="Color.Danger">#FFEF8A96</Color>
@@ -81,7 +81,7 @@
   <!-- Fixed logo color, independent of user-selected UI accents and themes. -->
   <SolidColorBrush x:Key="Brush.BrandOrange" Color="#FFF05032"/>
 
-  <!-- Ubuntu-inspired identity is independent of the desktop accent setting. -->
+  <!-- Warm near-black surfaces, quiet white hairlines, and orange actions follow the PeerBrush website. -->
   <Color x:Key="SystemAccentColor">#FFE95420</Color>
   <Color x:Key="SystemAccentColorDark1">#FFC84314</Color>
   <Color x:Key="SystemAccentColorDark2">#FFA63810</Color>
@@ -90,12 +90,13 @@
   <Color x:Key="SystemAccentColorLight2">#FFFFA47D</Color>
   <Color x:Key="SystemAccentColorLight3">#FFFFD2BF</Color>
   <SolidColorBrush x:Key="AccentButtonBackground" Color="#FFE95420"/>
-  <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#FFF27648"/>
+  <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#FFF26332"/>
   <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#FFD84919"/>
   <SolidColorBrush x:Key="AccentButtonBorderBrush" Color="#FFE95420"/>
-  <SolidColorBrush x:Key="AccentButtonForeground" Color="#FF211A17"/>
-  <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FF211A17"/>
-  <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FF211A17"/>
+  <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFFFF"/>
+  <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFFFF"/>
+  <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFFFF"/>
+  <SolidColorBrush x:Key="Brush.Selection" Color="#40E95420"/>
   <SolidColorBrush x:Key="Brush.Success" Color="{DynamicResource Color.Success}"/>
   <SolidColorBrush x:Key="Brush.Warning" Color="{DynamicResource Color.Warning}"/>
   <SolidColorBrush x:Key="Brush.Danger" Color="{DynamicResource Color.Danger}"/>

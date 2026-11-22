@@ -16,12 +16,6 @@ namespace SourceGit.ViewModels
             private set;
         }
 
-        public Workspace ActiveWorkspace
-        {
-            get => _activeWorkspace;
-            private set => SetProperty(ref _activeWorkspace, value);
-        }
-
         public LauncherPage ActivePage
         {
             get => _activePage;
@@ -49,11 +43,12 @@ namespace SourceGit.ViewModels
             Models.Notification.Raised += DispatchNotification;
             _ignoreIndexChange = true;
 
-            ActiveWorkspace = Preferences.Instance.GetActiveWorkspace();
+            _preferences = Preferences.Instance;
+            var activeRepository = _preferences.ActiveRepository;
             Pages = new AvaloniaList<LauncherPage>();
             AddNewTab();
 
-            var repos = ActiveWorkspace.Repositories.ToArray();
+            var repos = _preferences.OpenRepositories.ToArray();
             foreach (var repo in repos)
                 OpenRepositoryInTab(repo, null);
 
@@ -61,9 +56,15 @@ namespace SourceGit.ViewModels
 
             if (!TryOpenRepositoryFromPath(startupRepo))
             {
-                var activeIdx = ActiveWorkspace.ActiveIdx;
-                if (activeIdx > 0 && activeIdx < Pages.Count)
-                    ActivePage = Pages[activeIdx];
+                LauncherPage restored = null;
+                foreach (var page in Pages)
+                    if (page.Node.IsRepository && page.Node.Id == activeRepository)
+                        restored = page;
+
+                if (restored != null)
+                    ActivePage = restored;
+                else if (repos.Length > 0 && string.IsNullOrEmpty(activeRepository))
+                    AddNewTab();
                 else
                     ActivePage = Pages[0];
             }
@@ -120,42 +121,6 @@ namespace SourceGit.ViewModels
             _ignoreIndexChange = false;
         }
 
-        public void SwitchWorkspace(Workspace to)
-        {
-            if (to == null || to.IsActive)
-                return;
-
-            _ignoreIndexChange = true;
-
-            var pref = Preferences.Instance;
-            foreach (var w in pref.Workspaces)
-                w.IsActive = false;
-
-            ActiveWorkspace = to;
-            to.IsActive = true;
-
-            foreach (var one in Pages)
-                CloseRepositoryInTab(one, false);
-
-            Pages.Clear();
-            AddNewTab();
-
-            var repos = to.Repositories.ToArray();
-            foreach (var repo in repos)
-                OpenRepositoryInTab(repo, null);
-
-            var activeIdx = to.ActiveIdx;
-            if (activeIdx >= 0 && activeIdx < Pages.Count)
-                ActivePage = Pages[activeIdx];
-            else
-                ActivePage = Pages[0];
-
-            _ignoreIndexChange = false;
-            PostActivePageChanged();
-            Preferences.Instance.Save();
-            GC.Collect();
-        }
-
         public void AddNewTab()
         {
             var page = new LauncherPage();
@@ -171,14 +136,8 @@ namespace SourceGit.ViewModels
             var toIdx = Pages.IndexOf(to);
             Pages.Move(fromIdx, toIdx);
 
-            _activeWorkspace.Repositories.Clear();
-            foreach (var p in Pages)
-            {
-                if (p.Data is Repository r)
-                    _activeWorkspace.Repositories.Add(r.FullPath);
-            }
-
             _ignoreIndexChange = false;
+            RememberOpenRepositories();
             ActivePage = from;
         }
 
@@ -207,14 +166,17 @@ namespace SourceGit.ViewModels
             if (Pages.Count == 1)
             {
                 var last = Pages[0];
-                if (last.Data is Repository repo)
+                if (last.Node.IsRepository)
                 {
-                    _activeWorkspace.Repositories.Clear();
-                    _activeWorkspace.ActiveIdx = 0;
+                    _preferences.OpenRepositories.Clear();
+                    _preferences.ActiveRepository = string.Empty;
 
-                    if (last.Node.IsUnmanaged)
-                        last.Node.SaveMinimalInfo(repo.GitDir);
-                    repo.Close();
+                    if (last.Data is Repository repo)
+                    {
+                        if (last.Node.IsUnmanaged)
+                            last.Node.SaveMinimalInfo(repo.GitDir);
+                        repo.Close();
+                    }
 
                     Welcome.Instance.ClearSearchFilter();
                     last.Node = new RepositoryNode() { Id = Guid.NewGuid().ToString() };
@@ -262,8 +224,8 @@ namespace SourceGit.ViewModels
             Pages = new AvaloniaList<LauncherPage> { ActivePage };
             OnPropertyChanged(nameof(Pages));
 
-            _activeWorkspace.ActiveIdx = 0;
             _ignoreIndexChange = false;
+            PostActivePageChanged();
             GC.Collect();
         }
 
@@ -294,28 +256,34 @@ namespace SourceGit.ViewModels
                 IsUnmanaged = true
             };
 
-            OpenRepositoryInTab(node, null);
+            OpenRepositoryInTab(node, page);
         }
 
         public void OpenRepositoryInTab(RepositoryNode node, LauncherPage page)
         {
             foreach (var one in Pages)
             {
-                if (one.Node.Id == node.Id)
+                if (one.Node.Id != node.Id)
+                    continue;
+
+                if (one.Data is Repository)
                 {
                     ActivePage = one;
                     return;
                 }
+
+                // Retry an unavailable tab in place once its folder becomes available.
+                page = one;
+                break;
             }
+
+            // Opening another repository must not replace an existing saved tab.
+            if (page?.Node is { IsRepository: true } owner && owner.Id != node.Id)
+                page = null;
 
             if (!Directory.Exists(node.Id))
             {
-                ActivePage.Notifications.Add(new Models.Notification
-                {
-                    Group = node.Id,
-                    Message = "Repository does NOT exist any more. Please remove it.",
-                    IsError = true,
-                });
+                OpenUnavailableRepository(node, page, "Reconnect the folder or drive, then choose Retry. This tab has been kept.");
                 return;
             }
 
@@ -323,12 +291,7 @@ namespace SourceGit.ViewModels
             var gitDir = isBare ? node.Id : GetRepositoryGitDir(node.Id);
             if (string.IsNullOrEmpty(gitDir))
             {
-                ActivePage.Notifications.Add(new Models.Notification
-                {
-                    Group = node.Id,
-                    Message = "Given path is not a valid git repository!",
-                    IsError = true,
-                });
+                OpenUnavailableRepository(node, page, "This folder does not currently contain a Git repository. This tab has been kept.");
                 return;
             }
 
@@ -358,12 +321,7 @@ namespace SourceGit.ViewModels
                 page.Data = repo;
             }
 
-            _activeWorkspace.Repositories.Clear();
-            foreach (var p in Pages)
-            {
-                if (p.Data is Repository r)
-                    _activeWorkspace.Repositories.Add(r.FullPath);
-            }
+            RememberOpenRepositories();
 
             if (_activePage == page)
                 PostActivePageChanged();
@@ -433,7 +391,7 @@ namespace SourceGit.ViewModels
             var page = new LauncherPage(node, repo);
             var idxOfOwner = Pages.IndexOf(ownerPage);
             Pages.Insert(idxOfOwner + 1, page);
-            _activeWorkspace.Repositories.Insert(idxOfOwner + 1, normalizedPath);
+            RememberOpenRepositories();
             ActivePage = page;
         }
 
@@ -495,12 +453,13 @@ namespace SourceGit.ViewModels
             return new Commands.QueryGitDir(repo).GetResult();
         }
 
-        private void CloseRepositoryInTab(LauncherPage page, bool removeFromWorkspace = true)
+        private void CloseRepositoryInTab(LauncherPage page, bool removeFromSession = true)
         {
+            if (removeFromSession && page.Node.IsRepository)
+                _preferences.OpenRepositories.Remove(page.Node.Id);
+
             if (page.Data is Repository repo)
             {
-                if (removeFromWorkspace)
-                    _activeWorkspace.Repositories.Remove(repo.FullPath);
 
                 if (page.Node.IsUnmanaged)
                     page.Node.SaveMinimalInfo(repo.GitDir);
@@ -518,13 +477,46 @@ namespace SourceGit.ViewModels
             if (_ignoreIndexChange)
                 return;
 
-            if (_activePage is { Data: Repository repo })
-                _activeWorkspace.ActiveIdx = _activeWorkspace.Repositories.IndexOf(repo.FullPath);
+            _preferences.ActiveRepository = _activePage?.Node is { IsRepository: true } node ? node.Id : string.Empty;
 
             CommandPalette = null;
         }
 
-        private Workspace _activeWorkspace;
+        private void OpenUnavailableRepository(RepositoryNode node, LauncherPage page, string reason)
+        {
+            if (page == null)
+            {
+                if (_activePage is { Node.IsRepository: false })
+                    page = _activePage;
+                else
+                {
+                    page = new LauncherPage();
+                    Pages.Add(page);
+                }
+            }
+
+            page.Node = node;
+            page.Data = Welcome.Instance;
+            page.UnavailableReason = reason;
+            RememberOpenRepositories();
+            if (_activePage == page)
+                PostActivePageChanged();
+            else
+                ActivePage = page;
+        }
+
+        private void RememberOpenRepositories()
+        {
+            if (_ignoreIndexChange)
+                return;
+
+            _preferences.OpenRepositories.Clear();
+            foreach (var page in Pages)
+                if (page.Node.IsRepository)
+                    _preferences.OpenRepositories.Add(page.Node.Id);
+        }
+
+        private readonly Preferences _preferences;
         private LauncherPage _activePage;
         private bool _ignoreIndexChange;
         private ICommandPalette _commandPalette;

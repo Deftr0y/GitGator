@@ -25,7 +25,7 @@ namespace SourceGit.ViewModels
                 _instance.PrepareGit();
                 _instance.PrepareShellOrTerminal();
                 _instance.PrepareExternalDiffMergeTool();
-                _instance.PrepareWorkspaces();
+                _instance.PrepareTabs();
 
                 return _instance;
             }
@@ -331,7 +331,7 @@ namespace SourceGit.ViewModels
             get => Native.OS.CredentialHelper.Equals("libsecret", StringComparison.Ordinal);
             set
             {
-                var helper = value ? "libsecret" : "manager";
+                var helper = value ? "libsecret" : string.Empty;
                 if (OperatingSystem.IsLinux() && !Native.OS.CredentialHelper.Equals(helper, StringComparison.Ordinal))
                 {
                     Native.OS.CredentialHelper = helper;
@@ -450,11 +450,17 @@ namespace SourceGit.ViewModels
             set;
         } = [];
 
+        // Read old sessions once so removing workspaces does not discard saved tabs.
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<Workspace> Workspaces
         {
             get;
             set;
-        } = [];
+        }
+
+        public List<string> OpenRepositories { get; set; }
+
+        public string ActiveRepository { get; set; } = string.Empty;
 
         public AvaloniaList<Models.CustomAction> CustomActions
         {
@@ -498,19 +504,6 @@ namespace SourceGit.ViewModels
 
             LastCheckUpdateTime = now.Subtract(DateTime.UnixEpoch.ToLocalTime()).TotalSeconds;
             return true;
-        }
-
-        public Workspace GetActiveWorkspace()
-        {
-            foreach (var w in Workspaces)
-            {
-                if (w.IsActive)
-                    return w;
-            }
-
-            var first = Workspaces[0];
-            first.IsActive = true;
-            return first;
         }
 
         public void AddNode(RepositoryNode node, RepositoryNode to, bool save)
@@ -696,22 +689,44 @@ namespace SourceGit.ViewModels
             }
         }
 
-        private void PrepareWorkspaces()
+        private void PrepareTabs()
         {
-            if (Workspaces.Count == 0)
+            if (OpenRepositories == null)
             {
-                Workspaces.Add(new Workspace() { Name = "Default" });
-                return;
+                OpenRepositories = [];
+                var active = Workspaces?.Find(w => w?.IsActive == true) ?? Workspaces?.Find(w => w != null);
+                var saved = new HashSet<string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+                void AddRepositories(Workspace workspace)
+                {
+                    if (workspace?.Repositories == null)
+                        return;
+
+                    foreach (var path in workspace.Repositories)
+                    {
+                        if (string.IsNullOrWhiteSpace(path))
+                            continue;
+
+                        var normalized = path.Replace('\\', '/').TrimEnd('/');
+                        if (saved.Add(normalized))
+                            OpenRepositories.Add(normalized);
+                    }
+                }
+
+                AddRepositories(active);
+                if (Workspaces != null)
+                    foreach (var workspace in Workspaces)
+                        AddRepositories(workspace);
+
+                if (active?.Repositories is { } repositories && active.ActiveIdx >= 0 && active.ActiveIdx < repositories.Count &&
+                    !string.IsNullOrWhiteSpace(repositories[active.ActiveIdx]))
+                    ActiveRepository = repositories[active.ActiveIdx].Replace('\\', '/').TrimEnd('/');
+
+                if (!string.IsNullOrEmpty(active?.DefaultCloneDir))
+                    GitDefaultCloneDir = active.DefaultCloneDir;
             }
 
-            foreach (var workspace in Workspaces)
-            {
-                if (!workspace.RestoreOnStartup)
-                {
-                    workspace.Repositories.Clear();
-                    workspace.ActiveIdx = 0;
-                }
-            }
+            Workspaces = null;
         }
 
         private RepositoryNode FindNodeRecursive(string id, List<RepositoryNode> collection)

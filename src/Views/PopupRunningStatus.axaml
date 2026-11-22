@@ -12,19 +12,18 @@
 
     <StackPanel Orientation="Horizontal" Margin="0,8">
       <ContentPresenter x:Name="Icon" Width="12" Height="12"/>
-      <TextBlock Margin="6,0,0,0" FontSize="14" FontWeight="Bold" Text="{DynamicResource Text.Running}"/>
+      <TextBlock Margin="6,0,0,0" FontSize="13" FontWeight="SemiBold" Text="{DynamicResource Text.Running}"/>
     </StackPanel>
 
     <TextBlock HorizontalAlignment="Stretch"
                TextWrapping="Wrap"
                FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize, Converter={x:Static c:DoubleConverters.Decrease}}"
-               FontStyle="Italic"
                Text="{Binding #ThisControl.Description}"/>
 
     <ProgressBar x:Name="ProgressBar"
                  Margin="0,8,0,0"
                  HorizontalAlignment="Stretch"
                  Background="{DynamicResource Brush.FG2}" Foreground="{DynamicResource Brush.Accent}"
-                 Minimum="0" Maximum="100"/>
+                 Height="4" Minimum="0" Maximum="100"/>
   </StackPanel>
 </UserControl>

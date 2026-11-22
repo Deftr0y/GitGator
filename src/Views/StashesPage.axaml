@@ -6,171 +6,124 @@
              xmlns:vm="using:SourceGit.ViewModels"
              xmlns:v="using:SourceGit.Views"
              xmlns:c="using:SourceGit.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="SourceGit.Views.StashesPage"
              x:DataType="vm:StashesPage">
-  <Grid SizeChanged="OnMainLayoutSizeChanged" Background="{DynamicResource Brush.SubPanel}">
+  <Grid SizeChanged="OnMainLayoutSizeChanged" Background="{DynamicResource Brush.Contents}">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="{Binding Source={x:Static vm:Preferences.Instance}, Path=Layout.StashesLeftWidth, Mode=TwoWay}" MinWidth="300"/>
+      <ColumnDefinition Width="{Binding Source={x:Static vm:Preferences.Instance}, Path=Layout.StashesLeftWidth, Mode=TwoWay}" MinWidth="260"/>
       <ColumnDefinition Width="4"/>
-      <ColumnDefinition Width="*" MinWidth="300"/>
+      <ColumnDefinition Width="*" MinWidth="320"/>
     </Grid.ColumnDefinitions>
 
-    <!-- Left -->
-    <Grid Grid.Column="0" RowDefinitions="28,36,*,28,*" Background="{DynamicResource Brush.Window}">
-      <!-- Stash Bar -->
-      <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
-        <Path Grid.Column="0" Margin="8,0,0,0" Width="14" Height="14" Fill="{DynamicResource Brush.FG2}" Data="{StaticResource Icons.Stashes}"/>
-        <TextBlock Grid.Column="1" Foreground="{DynamicResource Brush.FG2}" FontWeight="Bold" Margin="4,0,0,0">
-          <Run Text="{DynamicResource Text.Stashes.Stashes}"/>
-          <Run Text="{Binding Stashes, Converter={x:Static c:ListConverters.ToCount}, Mode=OneWay}"/>
-        </TextBlock>
-        <Button Grid.Column="3"
-                Classes="icon_button"
-                Width="26" Height="26"
-                Command="{Binding ClearStashes}"
-                ToolTip.Tip="{DynamicResource Text.Repository.ClearStashes}">
-          <Path Width="13" Height="13" Data="{StaticResource Icons.RemoveAll}"/>
-        </Button>
-      </Grid>
+    <Grid Grid.Column="0" RowDefinitions="32,32,*,32,*" Background="{DynamicResource Brush.Window}">
+      <Border Grid.Row="0" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="10,0,6,0" ColumnSpacing="5">
+          <TextBlock Text="Stashes" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="1" Foreground="{DynamicResource Brush.FG2}" FontSize="11" VerticalAlignment="Center"
+                     Text="{Binding Stashes, Converter={x:Static c:ListConverters.ToCount}, Mode=OneWay}"/>
+          <Button Grid.Column="3" Classes="flat" Height="24" MinHeight="24" Padding="9,0" FontSize="11" Content="Restore…"
+                  Click="OnApplySelectedStash" IsEnabled="{Binding SelectedStash, Converter={x:Static ObjectConverters.IsNotNull}}"
+                  ToolTip.Tip="Restore the selected stash; opens restore options"/>
+          <Button Grid.Column="4" Classes="icon_button" Width="24" Height="24" ToolTip.Tip="Stash options">
+            <Path Width="14" Height="14" Data="{StaticResource Icons.More}"/>
+            <Button.Flyout>
+              <MenuFlyout>
+                <MenuItem Header="Clear all stashes…" Command="{Binding ClearStashes}"
+                          IsEnabled="{Binding Stashes, Converter={x:Static c:ListConverters.IsNotNullOrEmpty}}"/>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+        </Grid>
+      </Border>
 
-      <!-- Search Bar -->
-      <Border Grid.Row="1" BorderThickness="0,1" BorderBrush="{DynamicResource Brush.Border0}">
-        <TextBox Height="24"
-                 Margin="4,0"
-                 BorderThickness="1"
-                 CornerRadius="12"
-                 Text="{Binding SearchFilter, Mode=TwoWay}"
-                 BorderBrush="{DynamicResource Brush.Border2}"
-                 VerticalContentAlignment="Center">
+      <Border Grid.Row="1" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}">
+        <TextBox Height="24" Margin="8,0" BorderThickness="1" CornerRadius="4" FontSize="11"
+                 Text="{Binding SearchFilter, Mode=TwoWay}" Watermark="Filter stashes"
+                 BorderBrush="{DynamicResource Brush.Border2}" VerticalContentAlignment="Center">
           <TextBox.InnerLeftContent>
-            <Path Width="14" Height="14"
-                  Margin="6,0,0,0"
-                  Fill="{DynamicResource Brush.FG2}"
-                  Data="{StaticResource Icons.Search}"/>
+            <Path Width="11" Height="11" Margin="7,0,2,0" Fill="{DynamicResource Brush.FG2}" Data="{StaticResource Icons.Search}"/>
           </TextBox.InnerLeftContent>
-
           <TextBox.InnerRightContent>
-            <Button Classes="icon_button"
-                    Focusable="False"
-                    Width="16"
-                    Margin="0,0,6,0"
-                    Command="{Binding ClearSearchFilter}"
-                    IsVisible="{Binding SearchFilter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                    HorizontalAlignment="Right">
-              <Path Width="14" Height="14"
-                    Margin="0,1,0,0"
-                    Fill="{DynamicResource Brush.FG1}"
-                    Data="{StaticResource Icons.Clear}"/>
+            <Button Classes="icon_button" Focusable="False" Width="22" Margin="0,0,2,0" Command="{Binding ClearSearchFilter}"
+                    IsVisible="{Binding SearchFilter, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" ToolTip.Tip="Clear filter">
+              <Path Width="10" Height="10" Data="{StaticResource Icons.Clear}"/>
             </Button>
           </TextBox.InnerRightContent>
         </TextBox>
       </Border>
 
-      <!-- Stash List -->
-      <ListBox Grid.Row="2"
-               Background="{DynamicResource Brush.Contents}"
-               ItemsSource="{Binding VisibleStashes}"
-               SelectedItem="{Binding SelectedStash, Mode=TwoWay}"
-               SelectionMode="Single"
-               KeyDown="OnStashListKeyDown"
-               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-               ScrollViewer.VerticalScrollBarVisibility="Auto">
-        <ListBox.Styles>
-          <Style Selector="ListBoxItem">
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Height" Value="50"/>
-          </Style>
-        </ListBox.Styles>
-
-        <ListBox.ItemsPanel>
-          <ItemsPanelTemplate>
-            <VirtualizingStackPanel Orientation="Vertical"/>
-          </ItemsPanelTemplate>
-        </ListBox.ItemsPanel>
-
-        <ListBox.ItemTemplate>
-          <DataTemplate DataType="m:Stash">
-            <Border Background="Transparent"
-                    BorderBrush="{DynamicResource Brush.Border2}" BorderThickness="0,0,0,1"
-                    Padding="4"
-                    ContextRequested="OnStashContextRequested"
-                    DoubleTapped="OnStashDoubleTapped"
-                    ToolTip.Tip="{Binding Message}">
-              <Grid RowDefinitions="Auto,*" >
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
-                  <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="DarkOrange"/>
-                  <v:DateTimePresenter Grid.Column="1"
-                                       Margin="8,0,0,0"
-                                       Timestamp="{Binding Time}"
-                                       Foreground="{DynamicResource Brush.FG2}"
-                                       FontFeatures="+tnum"/>
+      <Grid Grid.Row="2">
+        <ListBox Background="{DynamicResource Brush.Contents}" ItemsSource="{Binding VisibleStashes}"
+                 SelectedItem="{Binding SelectedStash, Mode=TwoWay}" SelectionMode="Single" KeyDown="OnStashListKeyDown"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+          <ListBox.Styles>
+            <Style Selector="ListBoxItem">
+              <Setter Property="Margin" Value="0"/>
+              <Setter Property="Padding" Value="0"/>
+              <Setter Property="Height" Value="44"/>
+              <Setter Property="CornerRadius" Value="0"/>
+            </Style>
+          </ListBox.Styles>
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate><VirtualizingStackPanel Orientation="Vertical"/></ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="m:Stash">
+              <Border Background="Transparent" BorderBrush="{DynamicResource Brush.Border0}" BorderThickness="0,0,0,1" Padding="10,4"
+                      ContextRequested="OnStashContextRequested" DoubleTapped="OnStashDoubleTapped" ToolTip.Tip="{Binding Message}">
+                <Grid RowDefinitions="16,*">
+                  <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
+                    <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Brush.Accent}" FontSize="11"/>
+                    <v:DateTimePresenter Grid.Column="1" Margin="8,0,0,0" HorizontalAlignment="Right" FontSize="11"
+                                         Timestamp="{Binding Time}" Foreground="{DynamicResource Brush.FG2}" FontFeatures="+tnum"/>
+                  </Grid>
+                  <v:StashSubjectPresenter Grid.Row="1" Subject="{Binding Subject}" Foreground="{DynamicResource Brush.FG1}"
+                                           FontSize="12" PrefixBackground="{DynamicResource Brush.InlineCode}" VerticalAlignment="Center"/>
                 </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Text="No stashes to show" Foreground="{DynamicResource Brush.FG2}" FontSize="12"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                   IsVisible="{Binding VisibleStashes, Converter={x:Static c:ListConverters.IsNullOrEmpty}}"/>
+      </Grid>
 
-                <v:StashSubjectPresenter Grid.Row="1"
-                                         Subject="{Binding Subject}"
-                                         Foreground="{DynamicResource Brush.FG1}"
-                                         FontSize="{Binding Source={x:Static vm:Preferences.Instance}, Path=DefaultFontSize}"
-                                         PrefixBackground="{DynamicResource Brush.InlineCode}"
-                                         VerticalAlignment="Bottom"/>
-              </Grid>
-            </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-
-      <!-- Changes Bar -->
       <Border Grid.Row="3" BorderThickness="0,1" BorderBrush="{DynamicResource Brush.Border0}">
-        <Grid ColumnDefinitions="Auto,*,Auto">
-          <Path Grid.Column="0" Margin="8,0,0,0" Width="14" Height="14" Fill="{DynamicResource Brush.FG2}" Data="{StaticResource Icons.Changes}"/>
-          <TextBlock Grid.Column="1" Foreground="{DynamicResource Brush.FG2}" FontWeight="Bold" Margin="4,0,0,0">
-            <Run Text="{DynamicResource Text.Stashes.Changes}"/>
-            <Run Text="{Binding Changes, Converter={x:Static c:ListConverters.ToCount}, Mode=OneWay}"/>
-          </TextBlock>
-
-          <v:ChangeViewModeSwitcher Grid.Column="2"
-                                    Width="26" Height="14"
-                                    Margin="0,1,0,0"
-                                    ViewMode="{Binding Source={x:Static vm:Preferences.Instance}, Path=ChangeViewMode, Mode=TwoWay}"/>
-        </Grid>
+        <StackPanel Orientation="Horizontal" Spacing="6" Margin="10,0" VerticalAlignment="Center">
+          <TextBlock Text="Changed files" FontWeight="SemiBold"/>
+          <TextBlock Text="{Binding Changes, Converter={x:Static c:ListConverters.ToCount}, Mode=OneWay}" FontSize="11"
+                     Foreground="{DynamicResource Brush.FG2}" VerticalAlignment="Center"/>
+        </StackPanel>
       </Border>
 
-      <!-- View Changes -->
-      <Border Grid.Row="4" Background="{DynamicResource Brush.Contents}">
-        <v:ChangeCollectionView ViewMode="{Binding Source={x:Static vm:Preferences.Instance}, Path=ChangeViewMode, Mode=OneWay}"
+      <Grid Grid.Row="4" Background="{DynamicResource Brush.Contents}">
+        <v:ChangeCollectionView ViewMode="Tree" FontSize="12"
                                 EnableCompactFolders="{Binding Source={x:Static vm:Preferences.Instance}, Path=EnableCompactFoldersInChangesTree}"
-                                Changes="{Binding Changes, Mode=OneWay}"
-                                Selection="{Binding ChangeSelection, Mode=TwoWay}"
-                                ContextRequested="OnChangeContextRequested"
-                                KeyDown="OnChangeCollectionViewKeyDown"/>
-      </Border>
+                                Changes="{Binding Changes, Mode=OneWay}" Selection="{Binding ChangeSelection, Mode=TwoWay}"
+                                ContextRequested="OnChangeContextRequested" KeyDown="OnChangeCollectionViewKeyDown"/>
+        <TextBlock Text="No files to show" Foreground="{DynamicResource Brush.FG2}" FontSize="12"
+                   HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                   IsVisible="{Binding Changes, Converter={x:Static c:ListConverters.IsNullOrEmpty}}"/>
+      </Grid>
     </Grid>
 
-    <GridSplitter Grid.Column="1"
-                  MinWidth=".5"
-                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                  Background="Transparent"
-                  BorderThickness="1,0,0,0"
-                  BorderBrush="{DynamicResource Brush.Border0}"
-                  Focusable="False"/>
+    <GridSplitter Grid.Column="1" MinWidth="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                  Background="Transparent" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource Brush.Border0}" Focusable="False"/>
 
-    <!-- Right -->
-    <Grid Grid.Column="2" Margin="4,4,6,4">
-      <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Path Width="64" Height="64" Data="{StaticResource Icons.Diff}" Fill="{DynamicResource Brush.FG2}"/>
-        <TextBlock Margin="0,16,0,0"
-                   Text="{DynamicResource Text.Diff.Welcome}"
-                   FontSize="18" FontWeight="Bold"
-                   Foreground="{DynamicResource Brush.FG2}"
-                   HorizontalAlignment="Center"/>
+    <Grid Grid.Column="2" Margin="4">
+      <StackPanel Orientation="Vertical" Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center"
+                  IsVisible="{Binding DiffContext, Converter={x:Static ObjectConverters.IsNull}}">
+        <Path Width="24" Height="24" Data="{StaticResource Icons.Stashes}" Fill="{DynamicResource Brush.FG2}"/>
+        <TextBlock Text="Select a stash" Foreground="{DynamicResource Brush.FG2}"
+                   IsVisible="{Binding SelectedStash, Converter={x:Static ObjectConverters.IsNull}}"/>
+        <TextBlock Text="Select a file" Foreground="{DynamicResource Brush.FG2}"
+                   IsVisible="{Binding SelectedStash, Converter={x:Static ObjectConverters.IsNotNull}}"/>
       </StackPanel>
-
       <ContentControl Content="{Binding DiffContext}">
         <ContentControl.DataTemplates>
-          <DataTemplate DataType="vm:DiffContext">
-            <v:DiffView/>
-          </DataTemplate>
+          <DataTemplate DataType="vm:DiffContext"><v:DiffView/></DataTemplate>
         </ContentControl.DataTemplates>
       </ContentControl>
     </Grid>

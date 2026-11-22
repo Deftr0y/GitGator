@@ -6,7 +6,10 @@ A free, open-source Git GUI focused on Ubuntu and Linux, starting from
 [SourceGit](https://github.com/sourcegit-scm/sourcegit) under the MIT license.
 
 This is an initial development baseline, version 0.1.0. The Simple Fork workspace
-uses Ubuntu dark colors, compact navigation and hierarchical file trees.
+uses PeerBrush's website-inspired warm dark colors, compact navigation and
+hierarchical file trees. Repositories open in tabs; there is no workspace
+switcher or tab-search interface. The new tab centers Clone, Open and Terminal
+actions above repository search and the saved repository list.
 Changes, Staged Changes and the commit form share one workspace. File previews
 are hidden by default; use **Preview file** when you want to inspect a diff.
 Selecting files or folders alone does not load their content. Use Stage/Unstage
@@ -37,6 +40,22 @@ An existing checkout is already initialized with the pinned editor submodule.
 The executable is `src/bin/Debug/net10.0/GitGator`.
 For a managed Release build, use `-c Release -p:DisableAOT=true`.
 See [build instructions](build/README.md) for publishing and native dependencies.
+
+## GitHub over HTTPS
+
+GitGator uses Git's configured credentials by default. For browser sign-in,
+install a current [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+and run:
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+gh auth setup-git --hostname github.com
+```
+
+Complete the browser authorization and answer Yes if asked to authenticate Git.
+For changes to `.github/workflows`, include `--scopes workflow` in the login
+command. Git's author name and email are separate settings and must also be set
+before creating commits. SSH keys are optional.
 
 ## App identity and storage
 

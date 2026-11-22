@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
@@ -55,10 +55,7 @@ namespace SourceGit.ViewModels
             RepositoryNode parent = null;
             if (_selectedGroupIndex == 0) // Auto (Based-on Default Clone Dir)
             {
-                var activeWorkspace = Preferences.Instance.GetActiveWorkspace();
-                var defaultCloneDir = activeWorkspace?.DefaultCloneDir;
-                if (string.IsNullOrEmpty(defaultCloneDir))
-                    defaultCloneDir = Preferences.Instance.GitDefaultCloneDir;
+                var defaultCloneDir = Preferences.Instance.GitDefaultCloneDir;
 
                 if (!string.IsNullOrEmpty(defaultCloneDir))
                 {

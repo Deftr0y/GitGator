@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
@@ -94,10 +94,7 @@ namespace SourceGit.ViewModels
             Groups.Add(new TargetGroup(string.Empty, "No Group", "Uncategorized"));
             CollectGroups(Groups, Preferences.Instance.RepositoryNodes);
 
-            var activeWorkspace = Preferences.Instance.GetActiveWorkspace();
-            _defaultCloneDir = activeWorkspace?.DefaultCloneDir;
-            if (string.IsNullOrEmpty(_defaultCloneDir))
-                _defaultCloneDir = Preferences.Instance.GitDefaultCloneDir;
+            _defaultCloneDir = Preferences.Instance.GitDefaultCloneDir;
 
             ParentFolder = _defaultCloneDir;
         }

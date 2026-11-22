@@ -10,14 +10,37 @@ namespace SourceGit.ViewModels
         public RepositoryNode Node
         {
             get => _node;
-            set => SetProperty(ref _node, value);
+            set
+            {
+                if (SetProperty(ref _node, value))
+                    OnPropertyChanged(nameof(IsUnavailable));
+            }
         }
 
         public object Data
         {
             get => _data;
-            set => SetProperty(ref _data, value);
+            set
+            {
+                if (SetProperty(ref _data, value))
+                {
+                    OnPropertyChanged(nameof(IsRepository));
+                    OnPropertyChanged(nameof(IsUnavailable));
+                }
+            }
         }
+
+        public bool IsRepository => Data is Repository;
+
+        public bool IsUnavailable => Node?.IsRepository == true && Data is Welcome;
+
+        public string UnavailableReason
+        {
+            get => _unavailableReason;
+            set => SetProperty(ref _unavailableReason, value);
+        }
+
+        public void RetryRepository() => App.GetLauncher()?.OpenRepositoryInTab(Node, this);
 
         public Models.DirtyState DirtyState
         {
@@ -124,6 +147,7 @@ namespace SourceGit.ViewModels
 
         private RepositoryNode _node = null;
         private object _data = null;
+        private string _unavailableReason = string.Empty;
         private Models.DirtyState _dirtyState = Models.DirtyState.None;
         private Popup _popup = null;
     }

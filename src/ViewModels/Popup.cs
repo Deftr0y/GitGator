@@ -7,6 +7,26 @@ namespace SourceGit.ViewModels
 {
     public class Popup : ObservableValidator, Models.ICommandLogReceiver
     {
+        public string ConfirmText => this switch
+        {
+            Clone => "Clone repository",
+            OpenLocalRepository => "Open repository",
+            Init => App.Text("Init"),
+            Fetch => App.Text("Fetch"),
+            Pull => App.Text("Pull"),
+            Push => App.Text("Push"),
+            CreateBranch => App.Text("CreateBranch.Title"),
+            CreateTag => App.Text("CreateTag.Title"),
+            DeleteBranch => App.Text("DeleteBranch"),
+            DeleteTag => App.Text("DeleteTag"),
+            Discard => App.Text("Discard"),
+            StashChanges => App.Text("Stash"),
+            Merge => App.Text("Merge"),
+            Rebase => App.Text("Rebase"),
+            Revert => App.Text("Revert"),
+            _ => App.Text("Sure"),
+        };
+
         public bool CanTerminate
         {
             get => _canTerminate;

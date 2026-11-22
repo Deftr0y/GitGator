@@ -35,11 +35,11 @@ namespace SourceGit.Views
         public Launcher()
         {
             if (OperatingSystem.IsMacOS())
-                CaptionHeight = new GridLength(34);
+                CaptionHeight = new GridLength(40);
             else if (UseSystemWindowFrame)
-                CaptionHeight = new GridLength(30);
+                CaptionHeight = new GridLength(40);
             else
-                CaptionHeight = new GridLength(38);
+                CaptionHeight = new GridLength(44);
 
             InitializeComponent();
             PositionChanged += OnPositionChanged;
@@ -95,7 +95,7 @@ namespace SourceGit.Views
                 _lastWindowState = (WindowState)change.OldValue!;
 
                 if (!OperatingSystem.IsMacOS() && !UseSystemWindowFrame)
-                    CaptionHeight = new GridLength(state == WindowState.Maximized ? 30 : 38);
+                    CaptionHeight = new GridLength(state == WindowState.Maximized ? 40 : 44);
 
                 ViewModels.Preferences.Instance.Layout.LauncherWindowState = state;
             }
@@ -187,14 +187,7 @@ namespace SourceGit.Views
                     vm.CommandPalette = null;
                     e.Handled = true;
                 }
-                else if (vm.ActivePage.Data is ViewModels.Repository repo
-                    && vm.CommandPalette is ViewModels.LauncherPagesCommandPalette
-                    && e.Key == Key.P
-                    && e.KeyModifiers == (cmdKey | KeyModifiers.Shift))
-                {
-                    vm.CommandPalette = new ViewModels.RepositoryCommandPalette(repo);
-                    e.Handled = true;
-                }
+
 
                 return;
             }
@@ -357,73 +350,6 @@ namespace SourceGit.Views
                 layout.LauncherPositionX = Position.X;
                 layout.LauncherPositionY = Position.Y;
             }
-        }
-
-        private void OnOpenWorkspaceMenu(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && DataContext is ViewModels.Launcher launcher)
-            {
-                if (launcher.CommandPalette != null)
-                    launcher.CommandPalette = null;
-
-                var pref = ViewModels.Preferences.Instance;
-                var menu = new ContextMenu();
-                menu.Placement = PlacementMode.BottomEdgeAlignedLeft;
-                menu.VerticalOffset = -6;
-
-                var groupHeader = new TextBlock()
-                {
-                    Text = App.Text("Launcher.Workspaces"),
-                    FontWeight = FontWeight.Bold,
-                };
-
-                var workspaces = new MenuItem();
-                workspaces.Header = groupHeader;
-                workspaces.IsEnabled = false;
-                menu.Items.Add(workspaces);
-
-                for (var i = 0; i < pref.Workspaces.Count; i++)
-                {
-                    var workspace = pref.Workspaces[i];
-
-                    var icon = this.CreateMenuIcon(workspace.IsActive ? "Icons.Check" : "Icons.Workspace");
-                    icon.Fill = workspace.Brush;
-
-                    var item = new MenuItem();
-                    item.Header = workspace.Name;
-                    item.Icon = icon;
-                    item.Click += (_, ev) =>
-                    {
-                        if (!workspace.IsActive)
-                            launcher.SwitchWorkspace(workspace);
-
-                        ev.Handled = true;
-                    };
-
-                    menu.Items.Add(item);
-                }
-
-                menu.Items.Add(new MenuItem() { Header = "-" });
-
-                var configure = new MenuItem();
-                configure.Header = App.Text("Workspace.Configure");
-                configure.Click += async (_, ev) =>
-                {
-                    await this.ShowDialogAsync(new ViewModels.ConfigureWorkspace());
-                    ev.Handled = true;
-                };
-                menu.Items.Add(configure);
-                menu.Open(btn);
-            }
-
-            e.Handled = true;
-        }
-
-        private void OnOpenPagesCommandPalette(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is ViewModels.Launcher vm)
-                vm.CommandPalette = new ViewModels.LauncherPagesCommandPalette(vm);
-            e.Handled = true;
         }
 
         private void OnCloseCommandPalette(object sender, PointerPressedEventArgs e)

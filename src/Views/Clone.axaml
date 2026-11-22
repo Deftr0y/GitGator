@@ -5,118 +5,176 @@
              xmlns:vm="using:SourceGit.ViewModels"
              xmlns:v="using:SourceGit.Views"
              xmlns:c="using:SourceGit.Converters"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="800"
+             d:DesignHeight="450"
              x:Class="SourceGit.Views.Clone"
              x:DataType="vm:Clone">
-  <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+  <StackPanel Orientation="Vertical" Margin="8,0">
     <StackPanel Orientation="Horizontal">
-      <Path Width="16" Height="16"
-            Margin="0,4,0,0"
-            Data="{StaticResource Icons.Clone}"/>
-
-      <TextBlock FontSize="18"
-                 Margin="8,0,0,0"
-                 Classes="bold"
-                 Text="{DynamicResource Text.Clone}"/>
+      <Path Width="16" Height="16" Margin="0" Data="{StaticResource Icons.Clone}" Fill="{DynamicResource Brush.Accent}"/>
+      <TextBlock FontSize="16" Margin="8,0,0,0" Text="{DynamicResource Text.Clone}" FontWeight="SemiBold"/>
     </StackPanel>
-
-    <Grid Margin="8,16,0,0" RowDefinitions="32,Auto,32,32,32,32,32,32" ColumnDefinitions="Auto,*">
-      <TextBlock Grid.Row="0" Grid.Column="0"
-                 HorizontalAlignment="Right"
+    <TextBlock Text="Download a repository from a Git host into a local folder."
+               FontSize="11"
+               Foreground="{DynamicResource Brush.FG2}"
+               TextWrapping="Wrap"
+               Margin="0,5,0,0"/>
+    <Grid Margin="0,14,0,0" RowDefinitions="34,Auto,34,34,28,34,30,28,34,30" ColumnDefinitions="120,*">
+      <TextBlock Grid.Row="0"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.RemoteURL}"/>
-      <TextBox Grid.Row="0" Grid.Column="1"
-               Height="28"
-               CornerRadius="3"
-               Text="{Binding Remote, Mode=TwoWay}">
+                 Text="{DynamicResource Text.Clone.RemoteURL}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="0"
+               Grid.Column="1"
+               Height="30"
+               CornerRadius="4"
+               Text="{Binding Remote, Mode=TwoWay}"
+               VerticalContentAlignment="Center"
+               Watermark="https://github.com/owner/project.git">
         <TextBox.InnerLeftContent>
-          <Path Width="12" Height="12"
-                Margin="4,0,2,0"
-                Data="{StaticResource Icons.Link}"
-                Fill="{DynamicResource Brush.FG1}"/>
+          <Path Width="12" Height="12" Margin="4,0,2,0" Data="{StaticResource Icons.Link}" Fill="{DynamicResource Brush.FG1}"/>
         </TextBox.InnerLeftContent>
-
         <TextBox.InnerRightContent>
           <v:RemoteProtocolSwitcher Url="{Binding Remote, Mode=TwoWay}"/>
         </TextBox.InnerRightContent>
       </TextBox>
-
-      <TextBlock Grid.Row="1" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <TextBlock Grid.Row="1"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
                  Text="{DynamicResource Text.SSHKey}"
-                 IsVisible="{Binding UseSSH}"/>
-      <TextBox Grid.Row="1" Grid.Column="1"
+                 IsVisible="{Binding UseSSH}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="1"
+               Grid.Column="1"
                x:Name="TxtSshKey"
-               Height="28"
-               CornerRadius="3"
+               Height="30"
+               CornerRadius="4"
                Watermark="{DynamicResource Text.SSHKey.Placeholder}"
                Text="{Binding SSHKey, Mode=TwoWay}"
-               IsVisible="{Binding UseSSH}">
+               IsVisible="{Binding UseSSH}"
+               VerticalContentAlignment="Center">
         <TextBox.InnerLeftContent>
-          <Path Width="12" Height="12"
-                Margin="4,0,2,0"
-                Data="{StaticResource Icons.Password}"
-                Fill="{DynamicResource Brush.FG1}"/>
+          <Path Width="12" Height="12" Margin="4,0,2,0" Data="{StaticResource Icons.Password}" Fill="{DynamicResource Brush.FG1}"/>
         </TextBox.InnerLeftContent>
-
         <TextBox.InnerRightContent>
-          <Button Classes="icon_button" Width="28" Height="28" Click="SelectSSHKey">
+          <Button Classes="icon_button" Width="28" Height="28" Click="SelectSSHKey" ToolTip.Tip="Choose an SSH private key">
             <Path Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.FG1}"/>
           </Button>
         </TextBox.InnerRightContent>
       </TextBox>
-
-      <TextBlock Grid.Row="2" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <TextBlock Grid.Row="2"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.ParentFolder}"/>
-      <TextBox Grid.Row="2" Grid.Column="1"
+                 Text="{DynamicResource Text.Clone.ParentFolder}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="2"
+               Grid.Column="1"
                x:Name="TxtParentFolder"
-               Height="28"
-               CornerRadius="3"
-               Text="{Binding ParentFolder, Mode=TwoWay}">
+               Height="30"
+               CornerRadius="4"
+               Text="{Binding ParentFolder, Mode=TwoWay}"
+               VerticalContentAlignment="Center"
+               Watermark="/home/you/Projects">
         <TextBox.InnerRightContent>
-          <Button Classes="icon_button" Width="28" Height="28" Margin="4,0,0,0" Click="SelectParentFolder">
+          <Button Classes="icon_button"
+                  Width="28"
+                  Height="28"
+                  Margin="4,0,0,0"
+                  Click="SelectParentFolder"
+                  ToolTip.Tip="Choose the parent folder">
             <Path Data="{StaticResource Icons.Folder.Open}" Fill="{DynamicResource Brush.FG1}"/>
           </Button>
         </TextBox.InnerRightContent>
       </TextBox>
-
-      <TextBlock Grid.Row="3" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <TextBlock Grid.Row="3"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.LocalName}"/>
-      <TextBox Grid.Row="3" Grid.Column="1"
-               Height="28"
-               CornerRadius="3"
-               Watermark="{DynamicResource Text.Clone.LocalName.Placeholder}"
-               Text="{Binding Local, Mode=TwoWay}"/>
-
-      <TextBlock Grid.Row="4" Grid.Column="0"
-                 HorizontalAlignment="Right"
+                 Text="{DynamicResource Text.Clone.LocalName}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="3"
+               Grid.Column="1"
+               Height="30"
+               CornerRadius="4"
+               Watermark="Use the repository name"
+               Text="{Binding Local, Mode=TwoWay}"
+               VerticalContentAlignment="Center"/>
+      <Border Grid.Row="4"
+              Grid.ColumnSpan="2"
+              Margin="0,4,0,0"
+              Padding="0,8,0,3"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource Brush.Border2}">
+        <TextBlock Text="Clone options" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
+      </Border>
+      <TextBlock Grid.Row="5"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.AdditionalParam}"/>
-      <TextBox Grid.Row="4" Grid.Column="1"
-               Height="28"
-               CornerRadius="3"
-               Watermark="{DynamicResource Text.Clone.AdditionalParam.Placeholder}"
-               Text="{Binding ExtraArgs, Mode=TwoWay}"/>
-
-      <TextBlock Grid.Row="5" Grid.Column="0"
-                 HorizontalAlignment="Right"
+                 Text="{DynamicResource Text.Clone.AdditionalParam}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <TextBox Grid.Row="5"
+               Grid.Column="1"
+               Height="30"
+               CornerRadius="4"
+               Watermark="Optional, for example --depth 1"
+               Text="{Binding ExtraArgs, Mode=TwoWay}"
+               VerticalContentAlignment="Center"/>
+      <CheckBox Grid.Row="6"
+                Grid.Column="1"
+                Content="{DynamicResource Text.Clone.RecurseSubmodules}"
+                IsChecked="{Binding InitAndUpdateSubmodules, Mode=TwoWay}"
+                ToolTip.Tip="--recurse-submodules"
+                MinHeight="28"/>
+      <Border Grid.Row="7"
+              Grid.ColumnSpan="2"
+              Margin="0,4,0,0"
+              Padding="0,8,0,3"
+              BorderThickness="0,1,0,0"
+              BorderBrush="{DynamicResource Brush.Border2}">
+        <TextBlock Text="Add to GitGator" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
+      </Border>
+      <TextBlock Grid.Row="8"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.Group}"/>
-      <ComboBox Grid.Row="5" Grid.Column="1"
-                Height="28" Padding="8,0"
-                VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                 Text="{DynamicResource Text.Clone.Group}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <ComboBox Grid.Row="8"
+                Grid.Column="1"
+                Height="30"
+                Padding="8,0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
                 ItemsSource="{Binding Groups}"
                 SelectedIndex="{Binding SelectedGroupIndex, Mode=TwoWay}">
         <ComboBox.ItemTemplate>
           <DataTemplate DataType="vm:TargetGroup">
             <Grid ColumnDefinitions="*,Auto">
-              <TextBlock Grid.Column="0"
-                         Text="{Binding Name, Mode=OneWay}"/>
+              <TextBlock Grid.Column="0" Text="{Binding Name, Mode=OneWay}"/>
               <TextBlock Grid.Column="1"
                          Text="{Binding Description, Mode=OneWay}"
                          Margin="8,0,0,0"
@@ -125,19 +183,20 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-
-      <TextBlock Grid.Row="6" Grid.Column="0"
-                 HorizontalAlignment="Right"
+      <TextBlock Grid.Row="9"
+                 Grid.Column="0"
+                 HorizontalAlignment="Left"
                  Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Clone.Bookmark}"/>
-      <v:BookmarkSelector Grid.Row="6" Grid.Column="1"
-                          HorizontalAlignment="Left" VerticalAlignment="Center"
+                 Text="{DynamicResource Text.Clone.Bookmark}"
+                 VerticalAlignment="Center"
+                 FontSize="12"
+                 Foreground="{DynamicResource Brush.FG2}"
+                 TextWrapping="Wrap"/>
+      <v:BookmarkSelector Grid.Row="9"
+                          Grid.Column="1"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"
                           Bookmark="{Binding Bookmark, Mode=TwoWay}"/>
-
-      <CheckBox Grid.Row="7" Grid.Column="1"
-                Content="{DynamicResource Text.Clone.RecurseSubmodules}"
-                IsChecked="{Binding InitAndUpdateSubmodules, Mode=TwoWay}"
-                ToolTip.Tip="--recurse-submodules"/>
     </Grid>
   </StackPanel>
 </UserControl>
