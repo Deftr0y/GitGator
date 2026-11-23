@@ -525,6 +525,26 @@
     <Setter Property="FontWeight" Value="SemiBold"/>
     <Setter Property="LetterSpacing" Value="-0.2"/>
   </Style>
+  <!-- "From -> to" card at the top of the Push and Pull dialogs. -->
+  <Style Selector="Border.route_card">
+    <Setter Property="Background" Value="{DynamicResource Brush.SubPanel}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border2}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="Padding" Value="14,12"/>
+  </Style>
+  <Style Selector="Border.route_chip">
+    <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="10,0"/>
+    <Setter Property="Height" Value="32"/>
+    <Setter Property="HorizontalAlignment" Value="Left"/>
+  </Style>
+  <Style Selector="Border.route_chip TextBlock.route_name">
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+  </Style>
+
   <!-- Rounded count chip. -->
   <Style Selector="Border.count_pill">
     <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>

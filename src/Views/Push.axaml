@@ -5,31 +5,54 @@
              xmlns:m="using:SourceGit.Models"
              xmlns:vm="using:SourceGit.ViewModels"
              xmlns:v="using:SourceGit.Views"
+             xmlns:c="using:SourceGit.Converters"
              mc:Ignorable="d"
              d:DesignWidth="500"
              d:DesignHeight="450"
              x:Class="SourceGit.Views.Push"
              x:DataType="vm:Push">
-  <StackPanel Orientation="Vertical" Margin="8,0">
+  <StackPanel Orientation="Vertical" Margin="8,0" Spacing="14">
     <StackPanel Orientation="Horizontal">
       <Path Width="16" Height="16" Data="{StaticResource Icons.Push}" Fill="{DynamicResource Brush.Accent}" Margin="0"/>
-      <TextBlock FontSize="16" Margin="8,0,0,0" Text="{DynamicResource Text.Push.Title}" FontWeight="SemiBold"/>
+      <TextBlock FontSize="16" Margin="8,0,0,0" Text="Push" FontWeight="SemiBold"/>
     </StackPanel>
-    <TextBlock Text="Publish local commits to the selected remote branch."
-               FontSize="11"
-               Foreground="{DynamicResource Brush.FG2}"
-               TextWrapping="Wrap"
-               Margin="0,5,0,0"/>
-    <Grid Margin="0,14,0,0" RowDefinitions="34,34,34,28,Auto,Auto,Auto,28,30,30,Auto,Auto" ColumnDefinitions="120,*">
-      <TextBlock Grid.Row="0"
-                 Grid.Column="0"
-                 HorizontalAlignment="Left"
-                 VerticalAlignment="Center"
-                 Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Push.Local}"
-                 FontSize="12"
-                 Foreground="{DynamicResource Brush.FG2}"
-                 TextWrapping="Wrap"/>
+
+    <!-- What goes where, before any setting. -->
+    <Border Classes="route_card">
+      <StackPanel Spacing="10">
+        <Grid ColumnDefinitions="*,Auto,*">
+          <StackPanel Grid.Column="0" Spacing="6">
+            <TextBlock Classes="eyebrow" Text="FROM THIS COMPUTER"/>
+            <Border Classes="route_chip">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Width="13" Height="13" Data="{StaticResource Icons.Branch}" Fill="{DynamicResource Brush.Accent}"/>
+                <TextBlock x:Name="RouteFrom" Classes="route_name" MaxWidth="170" Text="{Binding SelectedLocalBranch.Name, FallbackValue='No branch'}"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+          <Path Grid.Column="1" Width="16" Height="14" Margin="12,22,12,0" VerticalAlignment="Top" Data="M0 5H9L6 2L7.4 0.6L12.8 6L7.4 11.4L6 10L9 7H0Z" Fill="{DynamicResource Brush.FG3}"/>
+          <StackPanel Grid.Column="2" Spacing="6">
+            <TextBlock Classes="eyebrow" Text="TO THE REMOTE"/>
+            <Border Classes="route_chip">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Width="14" Height="14" Data="{StaticResource Icons.Remote}" Fill="{DynamicResource Brush.AI}"/>
+                <TextBlock x:Name="RouteTo" Classes="route_name" MaxWidth="150" Text="{Binding RouteTarget}"/>
+                <Border Background="{DynamicResource Brush.RowSelected}" CornerRadius="8" Padding="6,1" VerticalAlignment="Center" IsVisible="{Binding IsNewRemoteBranch}">
+                  <TextBlock Text="new" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource Brush.Accent}"/>
+                </Border>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Grid>
+        <TextBlock x:Name="RouteSummary" Text="{Binding RouteSummary}" TextWrapping="Wrap"/>
+        <TextBlock Classes="muted" FontSize="12" Text="{Binding RemoteAddress}" TextTrimming="CharacterEllipsis"
+                   IsVisible="{Binding RemoteAddress, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Change the route. -->
+    <Grid RowDefinitions="34,34,34" ColumnDefinitions="150,*">
+      <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" FontSize="12" Text="Branch to push"/>
       <v:BranchSelector Grid.Row="0"
                         Grid.Column="1"
                         Height="30"
@@ -38,15 +61,7 @@
                         Branches="{Binding LocalBranches}"
                         SelectedBranch="{Binding SelectedLocalBranch, Mode=TwoWay}"
                         IsEnabled="{Binding !HasSpecifiedLocalBranch}"/>
-      <TextBlock Grid.Row="1"
-                 Grid.Column="0"
-                 HorizontalAlignment="Left"
-                 VerticalAlignment="Center"
-                 Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Push.Remote}"
-                 FontSize="12"
-                 Foreground="{DynamicResource Brush.FG2}"
-                 TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" FontSize="12" Text="Remote"/>
       <ComboBox Grid.Row="1"
                 Grid.Column="1"
                 Height="30"
@@ -64,15 +79,7 @@
           </DataTemplate>
         </ComboBox.ItemTemplate>
       </ComboBox>
-      <TextBlock Grid.Row="2"
-                 Grid.Column="0"
-                 HorizontalAlignment="Left"
-                 VerticalAlignment="Center"
-                 Margin="0,0,8,0"
-                 Text="{DynamicResource Text.Push.To}"
-                 FontSize="12"
-                 Foreground="{DynamicResource Brush.FG2}"
-                 TextWrapping="Wrap"/>
+      <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" FontSize="12" Text="Branch on the remote"/>
       <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto">
         <v:BranchSelector Grid.Column="0"
                           Height="30"
@@ -90,75 +97,55 @@
           <Path Width="14" Height="14" Data="{StaticResource Icons.Branch.Add}"/>
         </Button>
       </Grid>
-      <Border Grid.Row="3"
-              Grid.ColumnSpan="2"
-              Margin="0,4,0,0"
-              Padding="0,8,0,3"
-              BorderThickness="0,1,0,0"
-              BorderBrush="{DynamicResource Brush.Border2}">
-        <TextBlock Text="Push options" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
-      </Border>
-      <CheckBox Grid.Row="4"
-                Grid.Column="1"
-                Height="30"
-                Content="{DynamicResource Text.Push.Tracking}"
+    </Grid>
+
+    <StackPanel Margin="150,-6,0,0">
+      <CheckBox Content="Remember this as the branch's usual destination"
                 IsChecked="{Binding Tracking, Mode=TwoWay}"
                 IsVisible="{Binding IsSetTrackOptionVisible}"
-                ToolTip.Tip="Remember this remote branch for future pulls and pushes"
+                ToolTip.Tip="Future pulls and pushes of this branch use this remote branch"
                 MinHeight="28"/>
-      <CheckBox Grid.Row="5"
-                Grid.Column="1"
-                Height="30"
-                Content="{DynamicResource Text.Push.CheckSubmodules}"
+      <CheckBox Content="{DynamicResource Text.Push.CheckSubmodules}"
                 IsChecked="{Binding CheckSubmodules, Mode=TwoWay}"
                 IsVisible="{Binding IsCheckSubmodulesVisible}"
                 ToolTip.Tip="Check that referenced submodule commits are available on their remotes"
                 MinHeight="28"/>
-      <CheckBox Grid.Row="6"
-                Grid.Column="1"
-                Content="{DynamicResource Text.Push.WithAllTags}"
+      <CheckBox Content="Also push all tags"
                 IsChecked="{Binding PushAllTags, Mode=TwoWay}"
                 IsVisible="{Binding SelectedRemote?.URL, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 ToolTip.Tip="Also publish every local tag to this remote"
                 MinHeight="28"/>
-      <Border Grid.Row="7"
-              Grid.ColumnSpan="2"
-              Margin="0,4,0,0"
-              Padding="0,8,0,3"
-              BorderThickness="0,1,0,0"
-              BorderBrush="{DynamicResource Brush.Border2}">
-        <TextBlock Text="Advanced options" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Brush.FG2}"/>
-      </Border>
-      <CheckBox Grid.Row="8"
-                Grid.Column="1"
-                Content="{DynamicResource Text.Push.NoVerify}"
-                IsChecked="{Binding NoVerify, Mode=TwoWay}"
-                ToolTip.Tip="Skip any pre-push checks configured for this repository"
-                MinHeight="28"
-                x:Name="SkipPrePushOption"/>
-      <CheckBox Grid.Row="9"
-                Grid.Column="1"
-                Content="{DynamicResource Text.Push.Force}"
-                IsChecked="{Binding ForcePush, Mode=TwoWay}"
-                ToolTip.Tip="Replace remote history only if the remote still matches your last fetch"
-                MinHeight="28"
-                x:Name="ForcePushOption"/>
-      <TextBlock Text="Force push can replace remote history. Git checks that the remote has not changed first."
-                 Grid.Row="10"
-                 Grid.Column="1"
-                 FontSize="11"
-                 Foreground="{DynamicResource Brush.Warning}"
-                 TextWrapping="Wrap"
-                 Margin="0,3,0,5"
-                 IsVisible="{Binding #ForcePushOption.IsChecked}"/>
-      <TextBlock Text="Pre-push checks will be skipped."
-                 Grid.Row="11"
-                 Grid.Column="1"
-                 FontSize="11"
-                 Foreground="{DynamicResource Brush.Warning}"
-                 TextWrapping="Wrap"
-                 Margin="0,3,0,5"
-                 IsVisible="{Binding #SkipPrePushOption.IsChecked}"/>
-    </Grid>
+    </StackPanel>
+
+    <!-- Rarely needed, and able to overwrite work: kept folded. -->
+    <StackPanel>
+      <ToggleButton x:Name="AdvancedToggle" Classes="group_expander" Height="26" Margin="0" HorizontalAlignment="Left">
+        <TextBlock Classes="eyebrow" Text="ADVANCED"/>
+      </ToggleButton>
+      <StackPanel Margin="150,2,0,0" IsVisible="{Binding #AdvancedToggle.IsChecked}">
+        <CheckBox Content="Skip pre-push checks"
+                  IsChecked="{Binding NoVerify, Mode=TwoWay}"
+                  ToolTip.Tip="Skip any pre-push hook configured for this repository"
+                  MinHeight="28"
+                  x:Name="SkipPrePushOption"/>
+        <CheckBox Content="Force push (replace the remote's history)"
+                  IsChecked="{Binding ForcePush, Mode=TwoWay}"
+                  ToolTip.Tip="Replace remote history only if the remote still matches your last fetch"
+                  MinHeight="28"
+                  x:Name="ForcePushOption"/>
+        <TextBlock Text="Force push can replace commits other people rely on. Git first checks that the remote has not changed since your last fetch."
+                   FontSize="12"
+                   Foreground="{DynamicResource Brush.Warning}"
+                   TextWrapping="Wrap"
+                   Margin="0,3,0,5"
+                   IsVisible="{Binding #ForcePushOption.IsChecked}"/>
+        <TextBlock Text="Pre-push checks will be skipped."
+                   FontSize="12"
+                   Foreground="{DynamicResource Brush.Warning}"
+                   TextWrapping="Wrap"
+                   Margin="0,3,0,5"
+                   IsVisible="{Binding #SkipPrePushOption.IsChecked}"/>
+      </StackPanel>
+    </StackPanel>
   </StackPanel>
 </UserControl>

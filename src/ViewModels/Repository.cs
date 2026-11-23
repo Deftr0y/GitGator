@@ -409,6 +409,12 @@ namespace SourceGit.ViewModels
             get;
         } = [];
 
+        /// <summary>Background Git operations for this repository, shown in the header's activity pill.</summary>
+        public JobQueue Jobs
+        {
+            get;
+        } = new JobQueue();
+
         public Repository(bool isBare, string path, string gitDir)
         {
             IsBare = isBare;
@@ -461,6 +467,9 @@ namespace SourceGit.ViewModels
 
         public void Close()
         {
+            // Work that has not started must not start on a closed repository. A running job finishes by itself.
+            Jobs.CancelWaiting();
+
             var commitMessage = _workingCopy.CommitMessage;
             if (!string.IsNullOrEmpty(commitMessage) && _workingCopy.InProgressContext != null)
                 File.WriteAllText(Path.Combine(GitDir, "MERGE_MSG"), commitMessage);
@@ -494,7 +503,7 @@ namespace SourceGit.ViewModels
             if (page == null)
                 return false;
 
-            return !_isAutoFetching && page.CanCreatePopup();
+            return page.CanCreatePopup();
         }
 
         public void ShowPopup(Popup popup)
@@ -506,11 +515,53 @@ namespace SourceGit.ViewModels
 
         public async Task ShowAndStartPopupAsync(Popup popup)
         {
+            // Nothing to ask: skip the dialog and queue the work. Otherwise show it, with any validation message.
+            if (popup.RunsInBackground && popup.CanStartDirectly() && popup.Check())
+            {
+                await RunPopupInBackgroundAsync(popup);
+                return;
+            }
+
             var page = GetOwnerPage();
             page.Popup = popup;
 
             if (popup.CanStartDirectly())
                 await page.ProcessPopupAsync();
+        }
+
+        /// <summary>Queues a confirmed dialog's work. Completes when the work has run; true when it succeeded.</summary>
+        public Task<bool> RunPopupInBackgroundAsync(Popup popup)
+        {
+            return Jobs.RunAsync(popup.JobTitle, popup.JobNeeds, async job =>
+            {
+                void OnPopupChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+                {
+                    if (e.PropertyName != nameof(Popup.ProgressDescription))
+                        return;
+
+                    // Git's progress lines arrive on worker threads.
+                    var text = popup.ProgressDescription;
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (job.IsRunning && !job.CancelRequested)
+                            job.Detail = text;
+                    });
+                }
+
+                popup.PropertyChanged += OnPopupChanged;
+                popup.InProgress = true;
+
+                try
+                {
+                    return await popup.Sure();
+                }
+                finally
+                {
+                    popup.InProgress = false;
+                    popup.PropertyChanged -= OnPopupChanged;
+                    popup.Cleanup();
+                }
+            }, popup.CanTerminate ? popup.Terminate : null);
         }
 
         public bool IsGitFlowEnabled()
@@ -1895,11 +1946,10 @@ namespace SourceGit.ViewModels
             if (IsAutoFetching)
                 return;
 
-            CommandLog log = null;
-
             try
             {
-                if (!Preferences.Instance.EnableAutoFetch || !CanCreatePopup())
+                // Never cut in front of work the user asked for.
+                if (!Preferences.Instance.EnableAutoFetch || Jobs.IsActive || !CanCreatePopup())
                 {
                     _lastFetchTime = DateTime.Now;
                     return;
@@ -1925,10 +1975,23 @@ namespace SourceGit.ViewModels
                     return;
 
                 IsAutoFetching = true;
-                log = CreateLog("Auto-Fetch");
 
-                foreach (var remote in remotes)
-                    await new Commands.Fetch(FullPath, remote).Use(log).ExecAsync();
+                // Runs as a quiet job: it shows in the activity pill and other remote work waits behind it.
+                await Jobs.RunAsync("Auto-fetch", JobNeeds.Remote, async _ =>
+                {
+                    var log = CreateLog("Auto-Fetch");
+                    try
+                    {
+                        foreach (var remote in remotes)
+                            await new Commands.Fetch(FullPath, remote).Use(log).ExecAsync();
+                    }
+                    finally
+                    {
+                        log.Complete();
+                    }
+
+                    return true;
+                }, quiet: true);
 
                 _lastFetchTime = DateTime.Now;
             }
@@ -1938,7 +2001,6 @@ namespace SourceGit.ViewModels
             }
 
             IsAutoFetching = false;
-            log?.Complete();
         }
 
         private readonly string _gitCommonDir = null;

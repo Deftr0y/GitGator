@@ -26,7 +26,10 @@ namespace SourceGit.ViewModels
             set
             {
                 if (SetProperty(ref _selectedLocalBranch, value, true))
+                {
                     PostLocalBranchChanged();
+                    NotifyRouteChanged();
+                }
             }
         }
 
@@ -43,7 +46,10 @@ namespace SourceGit.ViewModels
             set
             {
                 if (SetProperty(ref _selectedRemote, value, true))
+                {
                     PostSelectedRemoteChanged();
+                    NotifyRouteChanged();
+                }
             }
         }
 
@@ -64,8 +70,61 @@ namespace SourceGit.ViewModels
                     IsSetTrackOptionVisible = !string.IsNullOrEmpty(_selectedRemote.URL)
                         && value != null
                         && (value.Head == null || _selectedLocalBranch.Upstream != value.FullName);
+                    NotifyRouteChanged();
                 }
             }
+        }
+
+        /// <summary>The destination, as "remote/branch".</summary>
+        public string RouteTarget
+        {
+            get
+            {
+                if (_selectedRemote == null)
+                    return "No remote";
+
+                return _selectedRemoteBranch == null ? _selectedRemote.Name : $"{_selectedRemote.Name}/{_selectedRemoteBranch.Name}";
+            }
+        }
+
+        /// <summary>The remote branch does not exist yet; this push creates it.</summary>
+        public bool IsNewRemoteBranch => _selectedRemoteBranch != null && string.IsNullOrEmpty(_selectedRemoteBranch.Head);
+
+        public string RemoteAddress => DescribeRemoteAddress(_selectedRemote?.URL);
+
+        /// <summary>One sentence: what this push sends, and where.</summary>
+        public string RouteSummary
+        {
+            get
+            {
+                if (_selectedLocalBranch == null || _selectedRemote == null || _selectedRemoteBranch == null)
+                    return "Choose the branch to push and where it goes.";
+
+                var local = _selectedLocalBranch;
+                if (IsNewRemoteBranch)
+                    return $"Creates {_selectedRemoteBranch.Name} on {_selectedRemote.Name} with everything in {local.Name}.";
+
+                if (!string.Equals(local.Upstream, _selectedRemoteBranch.FullName, StringComparison.Ordinal))
+                    return $"Sends {local.Name} to {RouteTarget}, which is not the branch it normally goes to.";
+
+                var ahead = local.Ahead?.Count ?? 0;
+                var behind = local.Behind?.Count ?? 0;
+                if (ahead == 0)
+                    return $"Nothing new to send: {RouteTarget} already has everything in {local.Name}.";
+
+                if (behind > 0)
+                    return $"Sends {CountCommits(ahead)} to {RouteTarget}. It also has {CountCommits(behind)} you do not have yet, so pull first or this push will be refused.";
+
+                return $"Sends {CountCommits(ahead)} to {RouteTarget}.";
+            }
+        }
+
+        private void NotifyRouteChanged()
+        {
+            OnPropertyChanged(nameof(RouteTarget));
+            OnPropertyChanged(nameof(IsNewRemoteBranch));
+            OnPropertyChanged(nameof(RemoteAddress));
+            OnPropertyChanged(nameof(RouteSummary));
         }
 
         public bool IsSetTrackOptionVisible

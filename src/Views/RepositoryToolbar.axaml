@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:SourceGit.ViewModels"
+             xmlns:v="using:SourceGit.Views"
              xmlns:c="using:SourceGit.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="52"
              x:Class="SourceGit.Views.RepositoryToolbar"
@@ -33,76 +34,192 @@
     <Style Selector="Button.header_icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource Brush.FlatButton.BackgroundHovered}"/>
     </Style>
+    <!-- The activity pill: what Git is doing right now, in the middle of the header. -->
+    <Style Selector="Button.activity_pill">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Padding" Value="12,0"/>
+      <Setter Property="CornerRadius" Value="16"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border2}"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+    </Style>
+    <Style Selector="Button.activity_pill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border1}"/>
+    </Style>
     <Style Selector="Button.sync">
       <Setter Property="Height" Value="32"/>
       <Setter Property="MinHeight" Value="32"/>
-      <Setter Property="MinWidth" Value="104"/>
       <Setter Property="Padding" Value="14,0"/>
       <Setter Property="CornerRadius" Value="8"/>
     </Style>
+    <!-- Split button: the label runs the action with its usual settings, the arrow opens the options first. -->
+    <Style Selector="Button.split_main">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Padding" Value="13,0,11,0"/>
+      <Setter Property="CornerRadius" Value="8,0,0,8"/>
+    </Style>
+    <Style Selector="Button.split_main.alone">
+      <Setter Property="Padding" Value="14,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style Selector="Button.split_more">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="Width" Value="26"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="CornerRadius" Value="0,8,8,0"/>
+    </Style>
   </UserControl.Styles>
 
-  <!-- One line answers: which branch am I on, is it in sync, and what is the next step. -->
-  <Grid ColumnDefinitions="Auto,*,Auto,Auto,0" Margin="12,0,10,0" ColumnSpacing="10">
-    <Button Grid.Column="0" x:Name="BranchButton" Classes="branch_pill" Click="OpenBranchMenu"
-            AutomationProperties.Name="Current branch" ToolTip.Tip="Switch or create a branch">
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Path Width="13" Height="13" Data="{StaticResource Icons.Branch}" Fill="{DynamicResource Brush.Accent}"/>
-        <TextBlock Text="{Binding CurrentBranch?.Name, TargetNullValue='No branch yet'}" FontWeight="SemiBold"
-                   MaxWidth="280" TextTrimming="CharacterEllipsis"/>
-        <Path Width="9" Height="9" Margin="0,1,0,0" Data="{StaticResource Icons.Down}" Fill="{DynamicResource Brush.FG2}"/>
-      </StackPanel>
-    </Button>
-
-    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="6,0,0,0" ClipToBounds="True">
-      <Ellipse x:Name="SyncDot" Width="8" Height="8" VerticalAlignment="Center" Fill="{DynamicResource Brush.FG3}"/>
-      <TextBlock x:Name="SyncStatus" Classes="muted" TextTrimming="CharacterEllipsis"/>
-    </StackPanel>
-
-    <Button Grid.Column="2" x:Name="SyncButton" Classes="flat sync" Tapped="OnSync">
-      <ToolTip.Tip>
-        <StackPanel>
-          <TextBlock x:Name="SyncTip"/>
-          <TextBlock Classes="small" Margin="0,4,0,0" Text="Ctrl+click to choose options first" Foreground="{DynamicResource Brush.FG2}"/>
+  <!-- One line answers: which branch am I on, is it in sync, what is Git doing, and what is the next step. -->
+  <Grid ColumnDefinitions="*,Auto,*" Margin="12,0,10,0">
+    <!-- Left: where you are and whether it is in sync. -->
+    <Grid Grid.Column="0" ColumnDefinitions="Auto,*" ColumnSpacing="10">
+      <Button Grid.Column="0" x:Name="BranchButton" Classes="branch_pill" Click="OpenBranchMenu"
+              AutomationProperties.Name="Current branch" ToolTip.Tip="Switch or create a branch">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Path Width="13" Height="13" Data="{StaticResource Icons.Branch}" Fill="{DynamicResource Brush.Accent}"/>
+          <TextBlock Text="{Binding CurrentBranch?.Name, TargetNullValue='No branch yet'}" FontWeight="SemiBold"
+                     MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+          <Path Width="9" Height="9" Margin="0,1,0,0" Data="{StaticResource Icons.Down}" Fill="{DynamicResource Brush.FG2}"/>
         </StackPanel>
-      </ToolTip.Tip>
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Path x:Name="SyncIcon" Width="13" Height="13"/>
-        <TextBlock x:Name="SyncLabel"/>
-      </StackPanel>
-    </Button>
+      </Button>
 
-    <Button Grid.Column="3" x:Name="MoreButton" Classes="header_icon" AutomationProperties.Name="More actions" ToolTip.Tip="More actions">
-      <Path Width="15" Height="15" Data="{StaticResource Icons.More}"/>
+      <Grid Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="6,0,0,0">
+        <Ellipse x:Name="SyncDot" Width="8" Height="8" VerticalAlignment="Center" Fill="{DynamicResource Brush.FG3}"/>
+        <TextBlock Grid.Column="1" x:Name="SyncStatus" Classes="muted" TextTrimming="CharacterEllipsis"/>
+      </Grid>
+    </Grid>
+
+    <!-- Center: running and waiting Git work. Equal columns on both sides keep it in the middle of the window. -->
+    <Button Grid.Column="1" x:Name="ActivityButton" Classes="activity_pill" Margin="12,0"
+            IsVisible="{Binding Jobs.HasJobs}" AutomationProperties.Name="Activity"
+            ToolTip.Tip="Show what is running and what is waiting">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <v:LoadingIcon Width="13" Height="13" IsVisible="{Binding Jobs.IsRunning}"/>
+        <Path Width="13" Height="13" Data="{StaticResource Icons.CheckCircled}" Fill="{DynamicResource Brush.Success}" IsVisible="{Binding Jobs.ShowSuccess}"/>
+        <Path Width="13" Height="13" Data="{StaticResource Icons.Error}" Fill="{DynamicResource Brush.Danger}" IsVisible="{Binding Jobs.ShowFailure}"/>
+        <TextBlock x:Name="ActivityTitle" Text="{Binding Jobs.HeadlineTitle}" MaxWidth="280" TextTrimming="CharacterEllipsis"/>
+        <Border Classes="count_pill" Background="{DynamicResource Brush.Accent}" ToolTip.Tip="{Binding Jobs.OtherTip}"
+                IsVisible="{Binding Jobs.OtherCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}}">
+          <TextBlock x:Name="ActivityOthers" Foreground="White" Text="{Binding Jobs.OtherText}"/>
+        </Border>
+      </StackPanel>
       <Button.Flyout>
-        <MenuFlyout Placement="BottomEdgeAlignedRight">
-          <MenuItem Header="Fetch…" Click="FetchWithOptions"/>
-          <MenuItem Header="Pull…" Click="PullWithOptions" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="Push…" Click="PushWithOptions"/>
-          <MenuItem Header="-"/>
-          <MenuItem Header="{DynamicResource Text.Repository.NewBranch}" Command="{Binding CreateNewBranch}" InputGesture="{OnPlatform Ctrl+B, macOS=⌘+B}"/>
-          <MenuItem Header="{DynamicResource Text.Stash}" Click="StashFromMore" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="{DynamicResource Text.Apply.Title}" Command="{Binding ApplyPatch}" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="-"/>
-          <MenuItem Header="{DynamicResource Text.Repository.OpenWithExternalTools}" Click="OpenExternalToolsFromMore"/>
-          <MenuItem Header="{DynamicResource Text.Repository.ViewLogs}" Click="OpenGitLogs"/>
-          <MenuItem Header="{DynamicResource Text.Repository.Statistics}" Click="OpenStatistics"/>
-          <MenuItem Header="{DynamicResource Text.Repository.CustomActions}" Click="OpenCustomActionsFromMore"/>
-          <MenuItem Header="-"/>
-          <MenuItem Header="{DynamicResource Text.GitLFS}" Click="OpenGitLFSFromMore" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="{DynamicResource Text.GitFlow}" Click="OpenGitFlowFromMore" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="{DynamicResource Text.Bisect}" Click="StartBisect" IsVisible="{Binding !IsBare}"/>
-          <MenuItem Header="{DynamicResource Text.Repository.Clean}" Click="Cleanup"/>
-        </MenuFlyout>
+        <Flyout Placement="Bottom">
+          <StackPanel Width="360" Margin="4,2">
+            <TextBlock Classes="eyebrow" Text="ACTIVITY" Margin="0,0,0,6"/>
+            <ItemsControl x:Name="ActivityList" ItemsSource="{Binding Jobs.Jobs}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:BackgroundJob">
+                  <Grid ColumnDefinitions="22,*,Auto" Margin="0,6" ColumnSpacing="8">
+                    <Grid Grid.Column="0" VerticalAlignment="Top" Margin="0,3,0,0">
+                      <v:LoadingIcon Width="13" Height="13" IsVisible="{Binding IsRunning}"/>
+                      <Path Width="13" Height="13" Data="{StaticResource Icons.Waiting}" Fill="{DynamicResource Brush.FG3}" IsVisible="{Binding IsQueued}"/>
+                      <Path Width="13" Height="13" Data="{StaticResource Icons.CheckCircled}" Fill="{DynamicResource Brush.Success}" IsVisible="{Binding IsSucceeded}"/>
+                      <Path Width="13" Height="13" Data="{StaticResource Icons.Error}" Fill="{DynamicResource Brush.Danger}" IsVisible="{Binding IsFailed}"/>
+                      <Path Width="11" Height="11" Data="{StaticResource Icons.Close}" Fill="{DynamicResource Brush.FG3}" IsVisible="{Binding IsCancelled}"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1" Spacing="2">
+                      <TextBlock Text="{Binding Title}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Classes="muted" FontSize="12" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <Button Grid.Column="2" Classes="icon_button" Width="26" Height="26" VerticalAlignment="Center"
+                            IsVisible="{Binding CanCancel}" Click="OnCancelJob" ToolTip.Tip="Cancel">
+                      <Path Width="10" Height="10" Data="{StaticResource Icons.Close}"/>
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,0"
+                       Text="Work that needs the same thing runs one after another. You can keep using GitGator meanwhile."/>
+          </StackPanel>
+        </Flyout>
       </Button.Flyout>
     </Button>
 
-    <!-- Existing direct-action shortcuts stay available without adding toolbar controls. -->
-    <StackPanel Grid.Column="4" Orientation="Horizontal">
-      <Button Width="0" Height="0" Click="PushDirectlyByHotKey" IsVisible="False" HotKey="{OnPlatform Ctrl+Shift+Up, macOS=⌘+Shift+Up}"/>
-      <Button Width="0" Height="0" Click="PullDirectlyByHotKey" IsVisible="False" IsEnabled="{Binding !IsBare}" HotKey="{OnPlatform Ctrl+Shift+Down, macOS=⌘+Shift+Down}"/>
-      <Button Width="0" Height="0" Click="FetchDirectlyByHotKey" IsVisible="False" HotKey="{OnPlatform Ctrl+Down, macOS=⌘+Down}"/>
-      <Button Width="0" Height="0" Command="{Binding CreateNewBranch}" IsVisible="False" HotKey="{OnPlatform Ctrl+B, macOS=⌘+B}"/>
+    <!-- Right: the next step and everything else. -->
+    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+      <!-- Fetch, or Pull once there is something to pull. -->
+      <Grid x:Name="GetGroup" ColumnDefinitions="Auto,Auto" ColumnSpacing="1">
+        <Button Grid.Column="0" x:Name="GetButton" Classes="flat split_main" Tapped="OnGet">
+          <ToolTip.Tip>
+            <TextBlock x:Name="GetTip"/>
+          </ToolTip.Tip>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Path x:Name="GetIcon" Width="13" Height="13"/>
+            <TextBlock x:Name="GetLabel"/>
+          </StackPanel>
+        </Button>
+        <Button Grid.Column="1" x:Name="GetOptionsButton" Classes="flat split_more" Click="OnGetOptions">
+          <ToolTip.Tip>
+            <TextBlock x:Name="GetOptionsTip"/>
+          </ToolTip.Tip>
+          <Path Width="9" Height="9" Margin="0,1,0,0" Data="{StaticResource Icons.Down}"/>
+        </Button>
+      </Grid>
+
+      <!-- Push only shows while there is something to push. -->
+      <Grid x:Name="PushGroup" ColumnDefinitions="Auto,Auto" ColumnSpacing="1">
+        <Button Grid.Column="0" x:Name="PushButton" Classes="flat split_main" Tapped="OnPush">
+          <ToolTip.Tip>
+            <TextBlock x:Name="PushTip"/>
+          </ToolTip.Tip>
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Path x:Name="PushIcon" Width="13" Height="13"/>
+            <TextBlock x:Name="PushLabel"/>
+          </StackPanel>
+        </Button>
+        <Button Grid.Column="1" x:Name="PushOptionsButton" Classes="flat split_more" Click="OnPushOptions"
+                ToolTip.Tip="Push options…">
+          <Path Width="9" Height="9" Margin="0,1,0,0" Data="{StaticResource Icons.Down}"/>
+        </Button>
+      </Grid>
+
+      <Button x:Name="AddRemoteButton" Classes="flat sync" Click="OnAddRemote"
+              ToolTip.Tip="Connect an online copy of this repository">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <Path Width="12" Height="12" Data="{StaticResource Icons.Plus}"/>
+          <TextBlock Text="Add remote"/>
+        </StackPanel>
+      </Button>
+
+      <Button x:Name="MoreButton" Classes="header_icon" AutomationProperties.Name="More actions" ToolTip.Tip="More actions">
+        <Path Width="15" Height="15" Data="{StaticResource Icons.More}"/>
+        <Button.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedRight">
+            <MenuItem Header="Fetch…" Click="FetchWithOptions"/>
+            <MenuItem Header="Pull…" Click="PullWithOptions" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="Push…" Click="PushWithOptions"/>
+            <MenuItem Header="-"/>
+            <MenuItem Header="{DynamicResource Text.Repository.NewBranch}" Command="{Binding CreateNewBranch}" InputGesture="{OnPlatform Ctrl+B, macOS=⌘+B}"/>
+            <MenuItem Header="{DynamicResource Text.Stash}" Click="StashFromMore" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="{DynamicResource Text.Apply.Title}" Command="{Binding ApplyPatch}" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="-"/>
+            <MenuItem Header="{DynamicResource Text.Repository.OpenWithExternalTools}" Click="OpenExternalToolsFromMore"/>
+            <MenuItem Header="{DynamicResource Text.Repository.ViewLogs}" Click="OpenGitLogs"/>
+            <MenuItem Header="{DynamicResource Text.Repository.Statistics}" Click="OpenStatistics"/>
+            <MenuItem Header="{DynamicResource Text.Repository.CustomActions}" Click="OpenCustomActionsFromMore"/>
+            <MenuItem Header="-"/>
+            <MenuItem Header="{DynamicResource Text.GitLFS}" Click="OpenGitLFSFromMore" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="{DynamicResource Text.GitFlow}" Click="OpenGitFlowFromMore" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="{DynamicResource Text.Bisect}" Click="StartBisect" IsVisible="{Binding !IsBare}"/>
+            <MenuItem Header="{DynamicResource Text.Repository.Clean}" Click="Cleanup"/>
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+
+      <!-- Existing direct-action shortcuts stay available without adding toolbar controls. -->
+      <StackPanel Orientation="Horizontal" Width="0">
+        <Button Width="0" Height="0" Click="PushDirectlyByHotKey" IsVisible="False" HotKey="{OnPlatform Ctrl+Shift+Up, macOS=⌘+Shift+Up}"/>
+        <Button Width="0" Height="0" Click="PullDirectlyByHotKey" IsVisible="False" IsEnabled="{Binding !IsBare}" HotKey="{OnPlatform Ctrl+Shift+Down, macOS=⌘+Shift+Down}"/>
+        <Button Width="0" Height="0" Click="FetchDirectlyByHotKey" IsVisible="False" HotKey="{OnPlatform Ctrl+Down, macOS=⌘+Down}"/>
+        <Button Width="0" Height="0" Command="{Binding CreateNewBranch}" IsVisible="False" HotKey="{OnPlatform Ctrl+B, macOS=⌘+B}"/>
+      </StackPanel>
     </StackPanel>
   </Grid>
 </UserControl>

@@ -12,10 +12,25 @@ website and Ubuntu's dark style.
 
 - **Header.** The branch pill shows where you are and switches or creates
   branches. Next to it, one sentence says whether the branch is in sync
-  ("2 commits to push", "Up to date", "Only on this computer") and one button
-  offers the next step: Pull, Push, Publish branch, Add remote or Fetch. A
-  click runs it; Ctrl+click opens the dialog with every option. Fetch, Pull and
-  Push with options are also under **⋯**.
+  ("2 commits to push", "Up to date", "Only on this computer"). On the right:
+  **Fetch**, which becomes **Pull N** once there is something to pull, and
+  **Push N**, which only appears while there is something to push (or
+  **Publish branch** for a branch the remote has not seen). Clicking a label
+  runs it with the usual settings; the small arrow beside it opens the options
+  first. Fetch, Pull and Push with options are also under **⋯**.
+- **Activity.** Git work runs in the background and the window stays usable.
+  A pill in the middle of the header names what is running and counts what is
+  waiting; click it for the list, with a cancel button per item. Work that
+  needs the same thing waits its turn in the order you asked for it: a Fetch
+  clicked during a Push runs right after it. Work that does not overlap starts
+  at once, so you can stage and commit while a Push or Fetch is running. A Pull
+  uses both the remote and your files, so it waits for either. Failures show
+  as a message and do not hold up the next job.
+- **Push and Pull dialogs.** A card at the top shows the route (for example
+  `main` → `origin/main`), says in one sentence what will move, and shows the
+  remote's address. Force push and skipping hooks are folded under Advanced.
+  Pull says what happens to uncommitted work; with rebase on, it sets the work
+  aside and puts it back by default, because a rebase cannot start otherwise.
 - **Sidebar.** Changes, History and your local branches. Stashes, remotes, tags,
   submodules and worktrees sit under **Advanced**, which stays closed until you
   open it. Stashes also appears on its own while something is stashed.

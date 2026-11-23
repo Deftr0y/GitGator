@@ -108,6 +108,14 @@ namespace SourceGit.ViewModels
                 if (!dump.Check())
                     return;
 
+                // Repository work leaves the dialog at once and runs from the queue, so the window stays usable.
+                if (_data is Repository repo && dump.RunsInBackground)
+                {
+                    Popup = null;
+                    await repo.RunPopupInBackgroundAsync(dump);
+                    return;
+                }
+
                 dump.InProgress = true;
 
                 try

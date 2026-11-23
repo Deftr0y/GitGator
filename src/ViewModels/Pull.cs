@@ -23,7 +23,10 @@ namespace SourceGit.ViewModels
             set
             {
                 if (SetProperty(ref _selectedRemote, value))
+                {
                     PostRemoteSelected();
+                    NotifyRouteChanged();
+                }
             }
         }
 
@@ -37,7 +40,61 @@ namespace SourceGit.ViewModels
         public Models.Branch SelectedBranch
         {
             get => _selectedBranch;
-            set => SetProperty(ref _selectedBranch, value, true);
+            set
+            {
+                if (SetProperty(ref _selectedBranch, value, true))
+                    NotifyRouteChanged();
+            }
+        }
+
+        /// <summary>Where the commits come from, as "remote/branch".</summary>
+        public string RouteSource
+        {
+            get
+            {
+                if (_selectedRemote == null)
+                    return "No remote";
+
+                return _selectedBranch == null ? _selectedRemote.Name : $"{_selectedRemote.Name}/{_selectedBranch.Name}";
+            }
+        }
+
+        public string RemoteAddress => DescribeRemoteAddress(_selectedRemote?.URL);
+
+        /// <summary>One sentence: what this pull brings in, and from where.</summary>
+        public string RouteSummary
+        {
+            get
+            {
+                if (_selectedRemote == null || _selectedBranch == null)
+                    return "Choose the remote branch to pull from.";
+
+                if (!string.Equals(Current.Upstream, _selectedBranch.FullName, StringComparison.Ordinal))
+                    return $"Brings {RouteSource} into {Current.Name}, which is not the branch it normally follows.";
+
+                var behind = Current.Behind?.Count ?? 0;
+                if (behind == 0)
+                    return $"No new commits on {RouteSource} as of the last fetch. Pulling checks again.";
+
+                return $"Brings {CountCommits(behind)} from {RouteSource} into {Current.Name}.";
+            }
+        }
+
+        /// <summary>Shown above the choices for uncommitted work.</summary>
+        public string LocalChangesSummary
+        {
+            get
+            {
+                var count = _repo.LocalChangesCount;
+                return count == 1 ? "You have 1 uncommitted change. During the pull:" : $"You have {count} uncommitted changes. During the pull:";
+            }
+        }
+
+        private void NotifyRouteChanged()
+        {
+            OnPropertyChanged(nameof(RouteSource));
+            OnPropertyChanged(nameof(RemoteAddress));
+            OnPropertyChanged(nameof(RouteSummary));
         }
 
         public bool HasLocalChanges
@@ -66,6 +123,11 @@ namespace SourceGit.ViewModels
             DealWithLocalChanges = Preferences.Instance.UseStashAndReapplyByDefault ?
                 Models.DealWithLocalChanges.StashAndReapply :
                 Models.DealWithLocalChanges.DoNothing;
+
+            // A rebase refuses to start over uncommitted edits, so leaving them in place would always fail.
+            // Set them aside and put them back instead, so a one-click Pull works.
+            if (UseRebase && HasLocalChanges && DealWithLocalChanges == Models.DealWithLocalChanges.DoNothing)
+                DealWithLocalChanges = Models.DealWithLocalChanges.StashAndReapply;
 
             if (specifiedRemoteBranch != null)
             {

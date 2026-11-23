@@ -412,7 +412,38 @@ namespace SourceGit.ViewModels
             UpdateDetail();
         }
 
-        public async Task StageChangesAsync(List<Models.Change> changes, Models.Change next)
+        // Staging, unstaging and committing go through the repository's job queue: they start at once
+        // unless something else is using the working tree (a pull, a checkout ...), in which case they wait.
+        public Task StageChangesAsync(List<Models.Change> changes, Models.Change next)
+        {
+            if (changes == null || changes.Count == 0)
+                return Task.CompletedTask;
+
+            return _repo.Jobs.RunAsync(DescribeFiles("Stage", changes.Count), JobNeeds.Local, async _ =>
+            {
+                await StageChangesCoreAsync(changes, next);
+                return true;
+            }, quiet: true);
+        }
+
+        public Task UnstageChangesAsync(List<Models.Change> changes, Models.Change next)
+        {
+            if (changes == null || changes.Count == 0)
+                return Task.CompletedTask;
+
+            return _repo.Jobs.RunAsync(DescribeFiles("Unstage", changes.Count), JobNeeds.Local, async _ =>
+            {
+                await UnstageChangesCoreAsync(changes, next);
+                return true;
+            }, quiet: true);
+        }
+
+        private static string DescribeFiles(string verb, int count)
+        {
+            return count == 1 ? $"{verb} 1 file" : $"{verb} {count} files";
+        }
+
+        private async Task StageChangesCoreAsync(List<Models.Change> changes, Models.Change next)
         {
             var canStaged = await GetCanStageChangesAsync(changes);
             var count = canStaged.Count;
@@ -440,7 +471,7 @@ namespace SourceGit.ViewModels
             IsStaging = false;
         }
 
-        public async Task UnstageChangesAsync(List<Models.Change> changes, Models.Change next)
+        private async Task UnstageChangesCoreAsync(List<Models.Change> changes, Models.Change next)
         {
             var count = changes.Count;
             if (count == 0)
@@ -605,68 +636,57 @@ namespace SourceGit.ViewModels
             new Commands.DiffTool(_repo.FullPath, new Models.DiffOption(change, isUnstaged)).Open();
         }
 
-        public async Task ContinueMergeAsync()
+        public Task ContinueMergeAsync()
         {
-            if (_inProgressContext != null)
+            return RunInProgressStepAsync("Continue", async (context, log) =>
             {
-                using var lockWatcher = _repo.LockWatcher();
-                IsCommitting = true;
-
                 var mergeMsgFile = Path.Combine(_repo.GitDir, "MERGE_MSG");
                 if (File.Exists(mergeMsgFile) && !string.IsNullOrWhiteSpace(_commitMessage))
                     await File.WriteAllTextAsync(mergeMsgFile, _commitMessage);
 
-                var log = _repo.CreateLog($"Continue {_inProgressContext.Name}");
-                await _inProgressContext.ContinueAsync(log);
-                log.Complete();
-
-                CommitMessage = string.Empty;
-                IsCommitting = false;
-            }
-            else
-            {
-                _repo.MarkWorkingCopyDirtyManually();
-            }
+                await context.ContinueAsync(log);
+            });
         }
 
-        public async Task SkipMergeAsync()
+        public Task SkipMergeAsync()
         {
-            if (_inProgressContext != null)
-            {
-                using var lockWatcher = _repo.LockWatcher();
-                IsCommitting = true;
-
-                var log = _repo.CreateLog($"Skip {_inProgressContext.Name}");
-                await _inProgressContext.SkipAsync(log);
-                log.Complete();
-
-                CommitMessage = string.Empty;
-                IsCommitting = false;
-            }
-            else
-            {
-                _repo.MarkWorkingCopyDirtyManually();
-            }
+            return RunInProgressStepAsync("Skip", (context, log) => context.SkipAsync(log));
         }
 
-        public async Task AbortMergeAsync()
+        public Task AbortMergeAsync()
         {
-            if (_inProgressContext != null)
-            {
-                using var lockWatcher = _repo.LockWatcher();
-                IsCommitting = true;
+            return RunInProgressStepAsync("Abort", (context, log) => context.AbortAsync(log));
+        }
 
-                var log = _repo.CreateLog($"Abort {_inProgressContext.Name}");
-                await _inProgressContext.AbortAsync(log);
-                log.Complete();
-
-                CommitMessage = string.Empty;
-                IsCommitting = false;
-            }
-            else
+        private Task RunInProgressStepAsync(string verb, Func<InProgressContext, CommandLog, Task> step)
+        {
+            var context = _inProgressContext;
+            if (context == null)
             {
                 _repo.MarkWorkingCopyDirtyManually();
+                return Task.CompletedTask;
             }
+
+            IsCommitting = true;
+            return _repo.Jobs.RunAsync($"{verb} {context.Name.ToLowerInvariant()}", JobNeeds.Local, async _ =>
+            {
+                try
+                {
+                    using var lockWatcher = _repo.LockWatcher();
+
+                    var log = _repo.CreateLog($"{verb} {context.Name}");
+                    await step(context, log);
+                    log.Complete();
+
+                    CommitMessage = string.Empty;
+                }
+                finally
+                {
+                    IsCommitting = false;
+                }
+
+                return true;
+            });
         }
 
         public void ApplyCommitMessageTemplate(Models.CommitTemplate tmpl)
@@ -729,42 +749,59 @@ namespace SourceGit.ViewModels
                 }
             }
 
-            using var lockWatcher = _repo.LockWatcher();
+            // From here on nothing asks the user anything: queue the commit and let the window go.
             IsCommitting = true;
-            _repo.UIStates.AddRecentCommitMessage(_commitMessage);
+            var message = _commitMessage;
+            _repo.UIStates.AddRecentCommitMessage(message);
 
-            if (autoStage && _unstaged.Count > 0)
-                await StageChangesAsync(_unstaged, null);
-
-            var log = _repo.CreateLog("Commit");
-            var succ = await new Commands.Commit(_repo.FullPath, _commitMessage, EnableSignOff, NoVerifyOnCommit, _useAmend, _resetAuthor)
-                    .Use(log)
-                    .RunAsync();
-
-            log.Complete();
-
-            if (succ)
+            var succ = false;
+            try
             {
-                UseAmend = false;
-                CommitMessage = string.Empty;
-
-                if (autoPush && _repo.Remotes.Count > 0)
+                succ = await _repo.Jobs.RunAsync("Commit", JobNeeds.Local, async _ =>
                 {
-                    Models.Branch pushBranch = null;
-                    if (_repo.CurrentBranch == null)
-                    {
-                        var currentBranchName = await new Commands.QueryCurrentBranch(_repo.FullPath).GetResultAsync();
-                        pushBranch = new Models.Branch() { Name = currentBranchName };
-                    }
+                    using var lockWatcher = _repo.LockWatcher();
 
-                    if (_repo.CanCreatePopup())
-                        await _repo.ShowAndStartPopupAsync(new Push(_repo, pushBranch));
+                    if (autoStage && _unstaged.Count > 0)
+                        await StageChangesCoreAsync(_unstaged, null);
+
+                    var log = _repo.CreateLog("Commit");
+                    var done = await new Commands.Commit(_repo.FullPath, message, EnableSignOff, NoVerifyOnCommit, _useAmend, _resetAuthor)
+                        .Use(log)
+                        .RunAsync();
+
+                    log.Complete();
+                    return done;
+                });
+
+                if (succ)
+                {
+                    UseAmend = false;
+
+                    // Keep anything typed while the commit was waiting in the queue.
+                    if (string.Equals(_commitMessage, message, StringComparison.Ordinal))
+                        CommitMessage = string.Empty;
                 }
+
+                _repo.MarkBranchesDirtyManually();
+                _repo.RefreshSubmodules(); // Committing will not change submodule's HEAD (stage already changes it), So we need refresh submodules here manually.
+            }
+            finally
+            {
+                IsCommitting = false;
             }
 
-            _repo.MarkBranchesDirtyManually();
-            _repo.RefreshSubmodules(); // Committing will not change submodule's HEAD (stage already changes it), So we need refresh submodules here manually.
-            IsCommitting = false;
+            if (succ && autoPush && _repo.Remotes.Count > 0)
+            {
+                Models.Branch pushBranch = null;
+                if (_repo.CurrentBranch == null)
+                {
+                    var currentBranchName = await new Commands.QueryCurrentBranch(_repo.FullPath).GetResultAsync();
+                    pushBranch = new Models.Branch() { Name = currentBranchName };
+                }
+
+                if (_repo.CanCreatePopup())
+                    await _repo.ShowAndStartPopupAsync(new Push(_repo, pushBranch));
+            }
         }
 
         private List<Models.Change> GetVisibleChanges(List<Models.Change> changes)

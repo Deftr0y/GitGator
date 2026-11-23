@@ -72,10 +72,11 @@ namespace SourceGit.Views
             }
         }
 
-        // Turns ahead/behind bookkeeping into one sentence and one suggested next step.
+        // Turns ahead/behind bookkeeping into one sentence and the buttons that matter right now:
+        // Fetch (or Pull once there is something to pull), plus Push while there is something to push.
         private void UpdateSyncState()
         {
-            if (SyncButton == null)
+            if (GetButton == null)
                 return;
 
             var repo = _repo;
@@ -83,62 +84,58 @@ namespace SourceGit.Views
             var ahead = branch?.Ahead?.Count ?? 0;
             var behind = branch?.Behind?.Count ?? 0;
 
-            string status, label, tip, dot;
-            var primary = false;
+            var hasRemote = repo?.Remotes is { Count: > 0 };
+            var onBranch = branch is { IsDetachedHead: false };
+            var published = onBranch && !string.IsNullOrEmpty(branch.Upstream) && !branch.IsUpstreamGone;
+            var canPull = hasRemote && published && behind > 0 && !repo.IsBare;
+            var showPush = hasRemote && onBranch && !repo.IsBare && (!published || ahead > 0);
 
+            string status, dot;
             if (repo == null)
-            {
-                _syncAction = SyncAction.Fetch;
-                (status, label, tip, dot) = (string.Empty, App.Text("Fetch"), App.Text("Fetch"), "Brush.FG3");
-            }
-            else if (repo.Remotes == null || repo.Remotes.Count == 0)
-            {
-                _syncAction = SyncAction.AddRemote;
-                (status, label, tip, dot) = ("Only on this computer", "Add remote", "Connect an online copy of this repository", "Brush.FG3");
-            }
-            else if (branch == null || branch.IsDetachedHead || repo.IsBare)
-            {
-                _syncAction = SyncAction.Fetch;
-                (status, label, tip, dot) = (branch == null ? "No branch checked out" : "Not on a branch", App.Text("Fetch"), "Check the remote for new commits", "Brush.FG3");
-            }
-            else if (string.IsNullOrEmpty(branch.Upstream) || branch.IsUpstreamGone)
-            {
-                _syncAction = SyncAction.Publish;
-                primary = true;
-                (status, label, tip, dot) = ("This branch is not online yet", "Publish branch", "Push this branch to the remote for the first time", "Brush.Warning");
-            }
+                (status, dot) = (string.Empty, "Brush.FG3");
+            else if (!hasRemote)
+                (status, dot) = ("Only on this computer", "Brush.FG3");
+            else if (!onBranch)
+                (status, dot) = (branch == null ? "No branch checked out" : "Not on a branch", "Brush.FG3");
+            else if (!published)
+                (status, dot) = ("This branch is not online yet", "Brush.Warning");
             else if (behind > 0)
-            {
-                _syncAction = SyncAction.Pull;
-                primary = true;
-                status = ahead > 0 ? $"{Count(behind)} to pull · {Count(ahead)} to push" : $"{Count(behind)} to pull";
-                (label, tip, dot) = ($"{App.Text("Pull")} {behind}", "Bring the newer commits from the remote into this branch", "Brush.Warning");
-            }
+                (status, dot) = (ahead > 0 ? $"{Count(behind)} to pull · {Count(ahead)} to push" : $"{Count(behind)} to pull", "Brush.Warning");
             else if (ahead > 0)
-            {
-                _syncAction = SyncAction.Push;
-                primary = true;
-                status = $"{Count(ahead)} to push";
-                (label, tip, dot) = ($"{App.Text("Push")} {ahead}", "Send your commits to the remote", "Brush.Accent");
-            }
+                (status, dot) = ($"{Count(ahead)} to push", "Brush.Accent");
             else
-            {
-                _syncAction = SyncAction.Fetch;
-                (status, label, tip, dot) = ("Up to date", App.Text("Fetch"), "Check the remote for new commits", "Brush.Success");
-            }
+                (status, dot) = ("Up to date", "Brush.Success");
 
             SyncStatus.Text = status;
-            SyncLabel.Text = label;
-            SyncTip.Text = tip;
-            SyncIcon.Data = _syncAction switch
-            {
-                SyncAction.Pull => s_pullIcon,
-                SyncAction.Push or SyncAction.Publish => s_pushIcon,
-                SyncAction.AddRemote => this.FindResource("Icons.Plus") as Geometry,
-                _ => this.FindResource("Icons.Fetch") as Geometry,
-            };
-            SyncButton.Classes.Set("primary", primary);
             SyncDot.Fill = this.FindResource(dot) as IBrush ?? Brushes.Gray;
+
+            AddRemoteButton.IsVisible = repo != null && !hasRemote;
+
+            // Fetch or Pull.
+            _getIsPull = canPull;
+            GetGroup.IsVisible = hasRemote;
+            GetLabel.Text = canPull ? $"{App.Text("Pull")} {behind}" : App.Text("Fetch");
+            GetIcon.Data = canPull ? s_pullIcon : this.FindResource("Icons.Fetch") as Geometry;
+            GetTip.Text = canPull
+                ? $"Bring {Count(behind)} from the remote into {branch.Name}"
+                : "Check the remote for new commits";
+            GetOptionsTip.Text = canPull ? "Pull options…" : "Fetch options…";
+            GetButton.Classes.Set("primary", canPull);
+            GetOptionsButton.Classes.Set("primary", canPull);
+
+            // Push, or Publish for a branch the remote has not seen. Pull comes first when both apply.
+            PushGroup.IsVisible = showPush;
+            PushLabel.Text = published ? $"{App.Text("Push")} {ahead}" : "Publish branch";
+            PushIcon.Data = s_pushIcon;
+            PushTip.Text = published
+                ? $"Send {Count(ahead)} to the remote"
+                : "Choose where to put this branch online";
+            PushButton.Classes.Set("primary", !canPull);
+            PushOptionsButton.Classes.Set("primary", !canPull);
+
+            // Publishing always asks where, so it needs no separate options arrow.
+            PushOptionsButton.IsVisible = published;
+            PushButton.Classes.Set("alone", !published);
         }
 
         private static string Count(int commits)
@@ -146,33 +143,65 @@ namespace SourceGit.Views
             return commits == 1 ? "1 commit" : $"{commits} commits";
         }
 
-        private async void OnSync(object sender, TappedEventArgs e)
+        // A click on a label just does it with the usual settings; the arrow beside it (or Ctrl+click) asks first.
+        private async void OnGet(object sender, TappedEventArgs e)
         {
             if (DataContext is not ViewModels.Repository repo)
                 return;
 
-            // A plain click just does it; Ctrl+click opens the dialog with every option.
-            var direct = e.KeyModifiers is not KeyModifiers.Control;
             e.Handled = true;
+            var direct = e.KeyModifiers is not KeyModifiers.Control;
+            if (_getIsPull)
+                await repo.PullAsync(direct);
+            else
+                await repo.FetchAsync(direct);
+        }
 
-            switch (_syncAction)
-            {
-                case SyncAction.AddRemote:
-                    repo.AddRemote();
-                    break;
-                case SyncAction.Publish:
-                    await repo.PushAsync(false);
-                    break;
-                case SyncAction.Pull:
-                    await repo.PullAsync(direct);
-                    break;
-                case SyncAction.Push:
-                    await repo.PushAsync(direct);
-                    break;
-                default:
-                    await repo.FetchAsync(direct);
-                    break;
-            }
+        private async void OnGetOptions(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.Repository repo)
+                return;
+
+            e.Handled = true;
+            if (_getIsPull)
+                await repo.PullAsync(false);
+            else
+                await repo.FetchAsync(false);
+        }
+
+        private async void OnPush(object sender, TappedEventArgs e)
+        {
+            if (DataContext is not ViewModels.Repository repo)
+                return;
+
+            // A branch that is not online yet still opens the dialog: Git needs to know where to put it.
+            e.Handled = true;
+            await repo.PushAsync(e.KeyModifiers is not KeyModifiers.Control);
+        }
+
+        private async void OnPushOptions(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is not ViewModels.Repository repo)
+                return;
+
+            e.Handled = true;
+            await repo.PushAsync(false);
+        }
+
+        private void OnAddRemote(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.Repository repo)
+                repo.AddRemote();
+
+            e.Handled = true;
+        }
+
+        private void OnCancelJob(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button { DataContext: ViewModels.BackgroundJob job } && DataContext is ViewModels.Repository repo)
+                repo.Jobs.Cancel(job);
+
+            e.Handled = true;
         }
 
         private void OpenBranchMenu(object sender, RoutedEventArgs e)
@@ -229,20 +258,11 @@ namespace SourceGit.Views
             e.Handled = true;
         }
 
-        private enum SyncAction
-        {
-            Fetch,
-            Pull,
-            Push,
-            Publish,
-            AddRemote,
-        }
-
         private static readonly Geometry s_pullIcon = StreamGeometry.Parse("M5 0H7V9L10 6L11.4 7.4L6 12.8L0.6 7.4L2 6L5 9Z");
         private static readonly Geometry s_pushIcon = StreamGeometry.Parse("M5 13H7V4L10 7L11.4 5.6L6 0.2L0.6 5.6L2 7L5 4Z");
 
         private ViewModels.Repository _repo;
-        private SyncAction _syncAction = SyncAction.Fetch;
+        private bool _getIsPull = false;
 
         private void OpenExternalToolsFromMore(object sender, RoutedEventArgs e)
         {
