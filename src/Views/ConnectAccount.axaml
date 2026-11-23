@@ -115,7 +115,7 @@
       <!-- 1. The choices -->
       <StackPanel x:Name="ChoosePage" Spacing="8" IsVisible="{Binding IsChoosePage}">
         <Button x:Name="GitHubOption" Classes="option_card" Classes.recommended="{Binding IsGitHubRecommended}"
-                IsVisible="{Binding ShowGitHubOption}" Command="{Binding SignInWithGitHubAsync}">
+                IsVisible="{Binding ShowGitHubOption}" Command="{Binding OpenGitHubAsync}">
           <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
             <Border Classes="option_icon"><Path Data="{StaticResource Icons.GitHub}"/></Border>
             <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
@@ -217,6 +217,43 @@
         </Grid>
         <Button Classes="flat primary dialog_button" HorizontalAlignment="Right" Content="Done" Command="{Binding Back}"
                 IsVisible="{Binding !IsAskpass}"/>
+      </StackPanel>
+
+      <!-- GitHub: the account, and whether commits carry it -->
+      <StackPanel x:Name="GitHubAccountPage" Spacing="14" IsVisible="{Binding IsGitHubAccountPage}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+          <v:Avatar Width="48" Height="48" User="{Binding AccountUser}"/>
+          <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+            <TextBlock x:Name="AccountLogin" FontSize="16" FontWeight="SemiBold" Text="{Binding AccountLogin}"/>
+            <TextBlock Classes="muted" Text="{Binding AccountName}"
+                       IsVisible="{Binding AccountName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+        </Grid>
+
+        <Border Classes="route_card">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="eyebrow" Text="YOUR COMMITS"/>
+            <Grid ColumnDefinitions="Auto,*">
+              <Path Width="16" Height="16" VerticalAlignment="Top" Margin="0,2,10,0" Data="{StaticResource Icons.CheckCircled}"
+                    Fill="{DynamicResource Brush.Success}" IsVisible="{Binding UsesGitHubIdentity}"/>
+              <TextBlock Grid.Column="1" x:Name="IdentitySummary" TextWrapping="Wrap" Text="{Binding IdentitySummary}"/>
+            </Grid>
+            <StackPanel Spacing="8" IsVisible="{Binding !UsesGitHubIdentity}">
+              <Button x:Name="UseIdentityButton" Classes="flat primary dialog_button" HorizontalAlignment="Left"
+                      Content="Use my GitHub name and picture" Command="{Binding UseGitHubIdentityAsync}"
+                      IsEnabled="{Binding !IsApplyingIdentity}"/>
+              <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding IdentityDetail}"/>
+            </StackPanel>
+            <TextBlock x:Name="IdentityNote" Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding IdentityNote}"
+                       IsVisible="{Binding IdentityNote, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+        </Border>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Sign in again" Command="{Binding SignInWithGitHubAsync}"
+                  ToolTip.Tip="Switch to another GitHub account"/>
+          <Button Classes="flat dialog_button" Content="Done" Command="{Binding Back}"/>
+        </StackPanel>
       </StackPanel>
 
       <!-- GitHub CLI missing -->

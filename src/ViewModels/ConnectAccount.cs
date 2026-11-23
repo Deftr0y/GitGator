@@ -21,6 +21,7 @@ namespace SourceGit.ViewModels
             Choose,
             GitHubWaiting,
             GitHubSignedIn,
+            GitHubAccount,
             GitHubMissing,
             Bitbucket,
             Manual,
@@ -56,6 +57,7 @@ namespace SourceGit.ViewModels
                     OnPropertyChanged(nameof(IsChoosePage));
                     OnPropertyChanged(nameof(IsGitHubWaitingPage));
                     OnPropertyChanged(nameof(IsGitHubSignedInPage));
+                    OnPropertyChanged(nameof(IsGitHubAccountPage));
                     OnPropertyChanged(nameof(IsGitHubMissingPage));
                     OnPropertyChanged(nameof(IsBitbucketPage));
                     OnPropertyChanged(nameof(IsManualPage));
@@ -68,6 +70,7 @@ namespace SourceGit.ViewModels
         public bool IsChoosePage => _page == Step.Choose;
         public bool IsGitHubWaitingPage => _page == Step.GitHubWaiting;
         public bool IsGitHubSignedInPage => _page == Step.GitHubSignedIn;
+        public bool IsGitHubAccountPage => _page == Step.GitHubAccount;
         public bool IsGitHubMissingPage => _page == Step.GitHubMissing;
         public bool IsBitbucketPage => _page == Step.Bitbucket;
         public bool IsManualPage => _page == Step.Manual;
@@ -79,6 +82,58 @@ namespace SourceGit.ViewModels
         {
             get => _gitHubStatus;
             private set => SetProperty(ref _gitHubStatus, value);
+        }
+
+        /// <summary>The signed-in GitHub account, shown on its own page with the commit identity.</summary>
+        public Models.GitHubCli.Account Account
+        {
+            get => _account;
+            private set
+            {
+                if (SetProperty(ref _account, value))
+                {
+                    OnPropertyChanged(nameof(AccountLogin));
+                    OnPropertyChanged(nameof(AccountName));
+                    OnPropertyChanged(nameof(AccountUser));
+                    OnPropertyChanged(nameof(IdentityDetail));
+                }
+            }
+        }
+
+        public string AccountLogin => _account?.Login ?? string.Empty;
+        public string AccountName => _account?.Name ?? string.Empty;
+
+        /// <summary>Lets the avatar control load the account's picture.</summary>
+        public Models.User AccountUser => _account == null ? null : Models.User.FindOrAdd($"{_account.Login}±{_account.CommitEmail}");
+
+        /// <summary>True when new commits already carry the GitHub account's address.</summary>
+        public bool UsesGitHubIdentity
+        {
+            get => _usesGitHubIdentity;
+            private set => SetProperty(ref _usesGitHubIdentity, value);
+        }
+
+        public string IdentitySummary
+        {
+            get => _identitySummary;
+            private set => SetProperty(ref _identitySummary, value);
+        }
+
+        public string IdentityDetail => _account == null
+            ? string.Empty
+            : $"Sets Git's name to {_account.Login} and its email to {_account.CommitEmail} for every repository on this computer. Commits you already made keep their author.";
+
+        /// <summary>Set when the open repository overrides the name and email in its own settings.</summary>
+        public string IdentityNote
+        {
+            get => _identityNote;
+            private set => SetProperty(ref _identityNote, value);
+        }
+
+        public bool IsApplyingIdentity
+        {
+            get => _isApplyingIdentity;
+            private set => SetProperty(ref _isApplyingIdentity, value);
         }
 
         public string DeviceCode
@@ -190,12 +245,105 @@ namespace SourceGit.ViewModels
             }
 
             var user = await Models.GitHubCli.GetSignedInUserAsync();
+            _isSignedInToGitHub = user != null;
             GitHubStatus = user switch
             {
                 null => "Opens your browser to sign in",
                 "" => "Signed in",
                 _ => $"Signed in as {user}",
             };
+
+            if (user == null)
+                return;
+
+            // Say on the card whether commits already carry this account.
+            Account = await Models.GitHubCli.GetAccountAsync();
+            if (_account == null)
+                return;
+
+            await RefreshIdentityAsync();
+            GitHubStatus = _usesGitHubIdentity
+                ? $"Signed in as {_account.Login} · used for your commits"
+                : $"Signed in as {_account.Login} · not used for your commits yet";
+        }
+
+        /// <summary>The GitHub card: the account page when signed in (from the menu), otherwise the browser sign-in.</summary>
+        public async Task OpenGitHubAsync()
+        {
+            if (!IsAskpass && _isSignedInToGitHub && Models.GitHubCli.Find() != null)
+                await ShowGitHubAccountAsync();
+            else
+                await SignInWithGitHubAsync();
+        }
+
+        public async Task ShowGitHubAccountAsync()
+        {
+            if (_account == null)
+                Account = await Models.GitHubCli.GetAccountAsync();
+
+            if (_account == null)
+            {
+                ShowError("GitGator could not read your GitHub account. Check your internet connection, or sign in again.");
+                return;
+            }
+
+            await RefreshIdentityAsync();
+            Page = Step.GitHubAccount;
+        }
+
+        /// <summary>Makes new commits carry the GitHub account: its username as the name, its GitHub address as the email.</summary>
+        public async Task UseGitHubIdentityAsync()
+        {
+            if (_account == null || _isApplyingIdentity)
+                return;
+
+            IsApplyingIdentity = true;
+            try
+            {
+                var named = await new Commands.Config(null).SetAsync("user.name", _account.Login);
+                var addressed = named && await new Commands.Config(null).SetAsync("user.email", _account.CommitEmail);
+                await RefreshIdentityAsync();
+
+                if (addressed && _usesGitHubIdentity)
+                    GitHubStatus = $"Signed in as {_account.Login} · used for your commits";
+            }
+            finally
+            {
+                IsApplyingIdentity = false;
+            }
+        }
+
+        private async Task RefreshIdentityAsync()
+        {
+            if (_account == null)
+                return;
+
+            var name = await new Commands.Config(null).GetAsync("user.name");
+            var email = await new Commands.Config(null).GetAsync("user.email");
+            var linked = email.Equals(_account.CommitEmail, StringComparison.OrdinalIgnoreCase);
+
+            if (linked)
+                IdentitySummary = $"New commits are made as {name}. GitHub shows them with your username and picture.";
+            else if (string.IsNullOrEmpty(email))
+                IdentitySummary = "Git has no name and email for your commits yet. GitHub only shows your username and picture when the commit email belongs to your account.";
+            else
+                IdentitySummary = $"New commits are currently made as {name} <{email}>. GitHub only shows your username and picture when the commit email belongs to your account.";
+
+            UsesGitHubIdentity = linked;
+
+            // A repository can override the name and email for itself; say so instead of silently not applying.
+            var note = string.Empty;
+            if (App.GetLauncher()?.ActivePage?.Data is Repository repo)
+            {
+                var localEmail = await new Commands.Config(repo.FullPath).GetAsync("user.email");
+                if (!string.IsNullOrEmpty(localEmail) && !localEmail.Equals(email, StringComparison.OrdinalIgnoreCase))
+                {
+                    var localName = await new Commands.Config(repo.FullPath).GetAsync("user.name");
+                    note = $"{System.IO.Path.GetFileName(repo.FullPath)} sets its own name and email in Repository settings, so it keeps using {localName} <{localEmail}>.";
+                }
+            }
+
+            IdentityNote = note;
         }
 
         public async Task SignInWithGitHubAsync()
@@ -233,6 +381,21 @@ namespace SourceGit.ViewModels
 
                 SignedInUser = string.IsNullOrEmpty(user) ? "your GitHub account" : user;
                 GitHubStatus = string.IsNullOrEmpty(user) ? "Signed in" : $"Signed in as {user}";
+                _isSignedInToGitHub = true;
+                _account = null;
+                OnPropertyChanged(nameof(Account));
+
+                if (!IsAskpass)
+                {
+                    // From the menu: show the account and whether commits use it.
+                    await ShowGitHubAccountAsync();
+                    if (_account != null)
+                        GitHubStatus = _usesGitHubIdentity
+                            ? $"Signed in as {_account.Login} · used for your commits"
+                            : $"Signed in as {_account.Login} · not used for your commits yet";
+                    return;
+                }
+
                 Page = Step.GitHubSignedIn;
 
                 if (IsAskpass)
@@ -455,5 +618,11 @@ namespace SourceGit.ViewModels
         private string _secret = string.Empty;
         private string _bitbucketToken = string.Empty;
         private string _sshStatus = string.Empty;
+        private Models.GitHubCli.Account _account;
+        private bool _isSignedInToGitHub;
+        private bool _usesGitHubIdentity;
+        private bool _isApplyingIdentity;
+        private string _identitySummary = string.Empty;
+        private string _identityNote = string.Empty;
     }
 }

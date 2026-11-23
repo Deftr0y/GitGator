@@ -86,6 +86,13 @@ under **Accounts and sign-in…**.
   (`gh`), asks for the `workflow` scope so pushes may include
   `.github/workflows`, and runs `gh auth setup-git` so Git keeps using the
   sign-in. Git's follow-up password question is then answered from `gh`.
+  Opened from the menu while signed in, the GitHub card shows the account and
+  which name and email your commits use. **Use my GitHub name and picture**
+  sets Git's global name to your username and its email to your GitHub
+  address (`ID+username@users.noreply.github.com`), which is how GitHub
+  connects new commits to your account and shows your picture. Commits made
+  earlier keep their author; adding their email to your GitHub account
+  connects those too.
 - **Sign in with Bitbucket** opens Atlassian's API token page; paste the token
   back into the window. Bitbucket has no browser sign-in GitGator can use.
 - **Use an SSH key** opens the SSH key manager, the host's SSH settings page,

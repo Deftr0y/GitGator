@@ -20,6 +20,16 @@ namespace SourceGit.Models
         public const string DefaultDeviceUrl = "https://github.com/login/device";
         public const string InstallUrl = "https://github.com/cli/cli#installation";
 
+        /// <summary>The signed-in GitHub account.</summary>
+        public sealed record Account(string Login, string Id, string Name)
+        {
+            /// <summary>
+            ///     GitHub's own address for the account. Commits made with it are shown with the account's
+            ///     username and picture, and no personal email ends up in the history.
+            /// </summary>
+            public string CommitEmail => $"{Id}+{Login}@users.noreply.github.com";
+        }
+
         public static string Find()
         {
             var dirs = new List<string>();
@@ -61,6 +71,24 @@ namespace SourceGit.Models
 
             var match = REG_STATUS_ACCOUNT().Match(rs.Output);
             return match.Success ? match.Groups[1].Value : string.Empty;
+        }
+
+        /// <summary>Username, numeric id and display name of the signed-in account, or null when signed out.</summary>
+        public static async Task<Account> GetAccountAsync()
+        {
+            var gh = Find();
+            if (gh == null)
+                return null;
+
+            var rs = await RunAsync(gh, ["api", "user", "--jq", "[.login, (.id|tostring), (.name // \"\")] | @tsv"], TimeSpan.FromSeconds(25)).ConfigureAwait(false);
+            if (rs.ExitCode != 0)
+                return null;
+
+            var parts = rs.StdOut.Trim().Split('\t');
+            if (parts.Length < 2 || !REG_LOGIN().IsMatch(parts[0]) || !REG_ID().IsMatch(parts[1]))
+                return null;
+
+            return new Account(parts[0], parts[1], parts.Length > 2 ? parts[2].Trim() : string.Empty);
         }
 
         /// <summary>Synchronous on purpose: used by askpass before any window exists.</summary>
@@ -250,5 +278,11 @@ namespace SourceGit.Models
 
         [GeneratedRegex(@"account ([A-Za-z0-9-]+)")]
         private static partial Regex REG_STATUS_ACCOUNT();
+
+        [GeneratedRegex(@"^[A-Za-z0-9-]{1,39}$")]
+        private static partial Regex REG_LOGIN();
+
+        [GeneratedRegex(@"^\d{1,20}$")]
+        private static partial Regex REG_ID();
     }
 }
