@@ -35,6 +35,19 @@ namespace SourceGit
                 e.SetObserved();
             };
 
+            // Git's second credential question (the password) is often already answered:
+            // by the window that asked for the username, or by the GitHub CLI sign-in.
+            if (Environment.GetEnvironmentVariable("SOURCEGIT_LAUNCH_AS_ASKPASS") is "TRUE" &&
+                args.Length > 0 &&
+                Models.GitCredentialPrompt.TryAnswerSilently(args[0], out var answer))
+            {
+                var bytes = System.Text.Encoding.UTF8.GetBytes(answer + "\n");
+                using (var stdout = Console.OpenStandardOutput())
+                    stdout.Write(bytes, 0, bytes.Length);
+                System.Security.Cryptography.CryptographicOperations.ZeroMemory(bytes);
+                Environment.Exit(0);
+            }
+
             try
             {
                 if (TryLaunchAsRebaseTodoEditor(args, out int exitTodo))
@@ -446,6 +459,14 @@ namespace SourceGit
             var args = desktop.Args;
             if (args?.Length > 0)
             {
+                // HTTPS sign-in questions get the "Connect an account" choices; SSH passphrases keep the simple box.
+                var prompt = Models.GitCredentialPrompt.Parse(args[0]);
+                if (prompt != null)
+                {
+                    desktop.MainWindow = new Views.ConnectAccount(new ViewModels.ConnectAccount(prompt));
+                    return true;
+                }
+
                 var askpass = new Views.Askpass();
                 askpass.TxtDescription.Text = args[0];
                 desktop.MainWindow = askpass;

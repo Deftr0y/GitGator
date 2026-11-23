@@ -59,21 +59,33 @@ The executable is `src/bin/Debug/net10.0/GitGator`.
 For a managed Release build, use `-c Release -p:DisableAOT=true`.
 See [build instructions](build/README.md) for publishing and native dependencies.
 
-## GitHub over HTTPS
+## Signing in
 
-GitGator uses Git's configured credentials by default. For browser sign-in,
-install a current [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
-and run:
+When Git needs to sign in over HTTPS, GitGator opens a **Connect an account**
+window instead of a bare password box. The same window is in the gator menu
+under **Accounts and sign-in…**.
+
+- **Sign in with GitHub** opens your browser on GitHub's device page with the
+  one-time code already copied. It uses the
+  [GitHub CLI](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
+  (`gh`), asks for the `workflow` scope so pushes may include
+  `.github/workflows`, and runs `gh auth setup-git` so Git keeps using the
+  sign-in. Git's follow-up password question is then answered from `gh`.
+- **Sign in with Bitbucket** opens Atlassian's API token page; paste the token
+  back into the window. Bitbucket has no browser sign-in GitGator can use.
+- **Use an SSH key** opens the SSH key manager, the host's SSH settings page,
+  and can switch the repository's remotes for that host to SSH.
+- **Enter a username and token** works with any server.
+
+Without `gh`, you can still sign in from a terminal:
 
 ```sh
 gh auth login --hostname github.com --git-protocol https --web
 gh auth setup-git --hostname github.com
 ```
 
-Complete the browser authorization and answer Yes if asked to authenticate Git.
-For changes to `.github/workflows`, include `--scopes workflow` in the login
-command. Git's author name and email are separate settings and must also be set
-before creating commits. SSH keys are optional.
+Git's author name and email are separate settings and must also be set
+before creating commits.
 
 ## App identity and storage
 

@@ -1,0 +1,339 @@
+<v:ChromelessWindow xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:v="using:SourceGit.Views"
+                    xmlns:vm="using:SourceGit.ViewModels"
+                    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="420"
+                    x:Class="SourceGit.Views.ConnectAccount"
+                    x:DataType="vm:ConnectAccount"
+                    x:Name="ThisControl"
+                    Icon="/App.ico"
+                    Title="{Binding Title}"
+                    SizeToContent="Height"
+                    CanResize="False"
+                    WindowStartupLocation="CenterScreen"
+                    Width="480">
+  <Window.Styles>
+    <!-- Each way to connect is one large, clickable card. -->
+    <Style Selector="Button.option_card">
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+      <Setter Property="Padding" Value="12"/>
+      <Setter Property="CornerRadius" Value="12"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border2}"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface}"/>
+    </Style>
+    <Style Selector="Button.option_card:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border1}"/>
+    </Style>
+    <Style Selector="Button.option_card.recommended">
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    <Style Selector="Button.option_card.recommended:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    <Style Selector="Border.option_icon">
+      <Setter Property="Width" Value="40"/>
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="CornerRadius" Value="10"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+    </Style>
+    <Style Selector="Border.option_icon > Path">
+      <Setter Property="Width" Value="18"/>
+      <Setter Property="Height" Value="18"/>
+    </Style>
+    <Style Selector="TextBlock.option_title">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="TextBlock.option_desc">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="{DynamicResource Brush.FG2}"/>
+      <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    <Style Selector="Path.chevron">
+      <Setter Property="Width" Value="6"/>
+      <Setter Property="Height" Value="10"/>
+      <Setter Property="Fill" Value="{DynamicResource Brush.FG3}"/>
+    </Style>
+    <Style Selector="Border.badge">
+      <Setter Property="CornerRadius" Value="9"/>
+      <Setter Property="Padding" Value="7,1"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.RowSelected}"/>
+    </Style>
+    <Style Selector="Border.badge > TextBlock">
+      <Setter Property="FontSize" Value="10.5"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}"/>
+    </Style>
+    <Style Selector="Border.step_number">
+      <Setter Property="Width" Value="22"/>
+      <Setter Property="Height" Value="22"/>
+      <Setter Property="CornerRadius" Value="11"/>
+      <Setter Property="Background" Value="{DynamicResource Brush.Surface2}"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    <Style Selector="Border.step_number > TextBlock">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.dialog_button">
+      <Setter Property="Height" Value="34"/>
+      <Setter Property="MinHeight" Value="34"/>
+      <Setter Property="MinWidth" Value="96"/>
+      <Setter Property="Padding" Value="16,0"/>
+      <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style Selector="TextBox.field">
+      <Setter Property="Height" Value="34"/>
+      <Setter Property="CornerRadius" Value="8"/>
+      <Setter Property="Padding" Value="10,0"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- Title bar -->
+    <Grid Grid.Row="0" Height="30" IsVisible="{Binding !#ThisControl.UseSystemWindowFrame}">
+      <Border Background="{DynamicResource Brush.TitleBar}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border0}"
+              PointerPressed="BeginMoveWindow"/>
+      <Image Width="18" Height="18" Margin="10,0,0,0" HorizontalAlignment="Left" Source="/Resources/Images/gitgator.png"
+             IsHitTestVisible="False" IsVisible="{OnPlatform True, macOS=False}"/>
+      <TextBlock Classes="bold" Text="GitGator" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"/>
+      <v:CaptionButtons HorizontalAlignment="Right" IsCloseButtonOnly="True" IsVisible="{OnPlatform True, macOS=False}"/>
+    </Grid>
+
+    <StackPanel Grid.Row="1" Margin="24,20,24,22" Spacing="18">
+      <StackPanel Spacing="4">
+        <TextBlock Classes="page_title" FontSize="19" Text="{Binding Title}"/>
+        <TextBlock Classes="muted" Text="{Binding Subtitle}" TextWrapping="Wrap"/>
+      </StackPanel>
+
+      <!-- 1. The choices -->
+      <StackPanel x:Name="ChoosePage" Spacing="8" IsVisible="{Binding IsChoosePage}">
+        <Button x:Name="GitHubOption" Classes="option_card" Classes.recommended="{Binding IsGitHubRecommended}"
+                IsVisible="{Binding ShowGitHubOption}" Command="{Binding SignInWithGitHubAsync}">
+          <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+            <Border Classes="option_icon"><Path Data="{StaticResource Icons.GitHub}"/></Border>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="option_title" Text="Sign in with GitHub"/>
+                <Border Classes="badge" IsVisible="{Binding IsGitHubRecommended}"><TextBlock Text="Recommended"/></Border>
+              </StackPanel>
+              <TextBlock Classes="option_desc" Text="{Binding GitHubStatus}"/>
+            </StackPanel>
+            <Path Grid.Column="2" Classes="chevron" Data="{StaticResource Icons.TriangleRight}"/>
+          </Grid>
+        </Button>
+
+        <Button x:Name="BitbucketOption" Classes="option_card" Classes.recommended="{Binding IsBitbucketRecommended}"
+                IsVisible="{Binding ShowBitbucketOption}" Command="{Binding ChooseBitbucket}">
+          <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+            <Border Classes="option_icon"><Path Data="{StaticResource Icons.Remote}"/></Border>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Classes="option_title" Text="Sign in with Bitbucket"/>
+                <Border Classes="badge" IsVisible="{Binding IsBitbucketRecommended}"><TextBlock Text="Recommended"/></Border>
+              </StackPanel>
+              <TextBlock Classes="option_desc" Text="Uses an access token you create in your browser"/>
+            </StackPanel>
+            <Path Grid.Column="2" Classes="chevron" Data="{StaticResource Icons.TriangleRight}"/>
+          </Grid>
+        </Button>
+
+        <Button x:Name="SshOption" Classes="option_card" Click="OnSshOption">
+          <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+            <Border Classes="option_icon"><Path Data="{StaticResource Icons.Lock}"/></Border>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <TextBlock Classes="option_title" Text="Use an SSH key"/>
+              <TextBlock Classes="option_desc" Text="Create a key or copy one you have, then add it to your account"/>
+            </StackPanel>
+            <Path Grid.Column="2" Classes="chevron" Data="{StaticResource Icons.TriangleRight}"/>
+          </Grid>
+        </Button>
+
+        <Button x:Name="ManualOption" Classes="option_card" Classes.recommended="{Binding IsManualRecommended}"
+                IsVisible="{Binding ShowManualOption}" Command="{Binding ChooseManual}">
+          <Grid ColumnDefinitions="40,*,Auto" ColumnSpacing="12">
+            <Border Classes="option_icon"><Path Data="{StaticResource Icons.Password}"/></Border>
+            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+              <TextBlock Classes="option_title" Text="Enter a username and token"/>
+              <TextBlock Classes="option_desc" Text="For other servers, or a token or password you already have"/>
+            </StackPanel>
+            <Path Grid.Column="2" Classes="chevron" Data="{StaticResource Icons.TriangleRight}"/>
+          </Grid>
+        </Button>
+
+        <Button Classes="flat dialog_button" Margin="0,10,0,0" HorizontalAlignment="Right"
+                Content="{Binding IsAskpass, Converter={x:Static v:ConnectAccount.CancelOrClose}}" Command="{Binding Close}"/>
+      </StackPanel>
+
+      <!-- 2. GitHub: show the code while the browser is open -->
+      <StackPanel x:Name="GitHubWaitingPage" Spacing="14" IsVisible="{Binding IsGitHubWaitingPage}">
+        <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !HasDeviceCode}">
+          <v:LoadingIcon Width="16" Height="16"/>
+          <TextBlock Text="Asking GitHub for a sign-in code…"/>
+        </StackPanel>
+
+        <StackPanel Spacing="14" IsVisible="{Binding HasDeviceCode}">
+          <TextBlock TextWrapping="Wrap" Text="GitHub is open in your browser. Paste this code there and choose Authorize. It is already copied."/>
+          <Border Background="{DynamicResource Brush.Surface2}" CornerRadius="12" Padding="16,14">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock x:Name="DeviceCodeText" Text="{Binding DeviceCode}" HorizontalAlignment="Center"
+                         FontFamily="{DynamicResource Fonts.Monospace}" FontSize="28" FontWeight="SemiBold" LetterSpacing="4"/>
+              <Button Grid.Column="1" Classes="icon_button" Width="32" Height="32" Click="OnCopyCode" ToolTip.Tip="Copy the code again">
+                <Path Width="14" Height="14" Data="{StaticResource Icons.Copy}"/>
+              </Button>
+            </Grid>
+          </Border>
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <v:LoadingIcon Width="14" Height="14"/>
+            <TextBlock Classes="muted" Text="Waiting for you to approve it on github.com…"/>
+          </StackPanel>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Cancel" Command="{Binding CancelGitHubSignIn}"/>
+          <Button Classes="flat primary dialog_button" Content="Open GitHub again" Command="{Binding OpenDevicePage}"
+                  IsEnabled="{Binding HasDeviceCode}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- 3. GitHub: done -->
+      <StackPanel x:Name="GitHubSignedInPage" Spacing="14" IsVisible="{Binding IsGitHubSignedInPage}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Path Width="26" Height="26" VerticalAlignment="Top" Data="{StaticResource Icons.CheckCircled}" Fill="{DynamicResource Brush.Success}"/>
+          <StackPanel Grid.Column="1" Spacing="4">
+            <TextBlock FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap">
+              <Run Text="Signed in as"/>
+              <Run Text="{Binding SignedInUser}"/>
+            </TextBlock>
+            <TextBlock Classes="muted" TextWrapping="Wrap" Text="Git on this computer now uses this account for github.com."/>
+            <TextBlock Classes="muted" Text="Continuing…" IsVisible="{Binding IsAskpass}"/>
+          </StackPanel>
+        </Grid>
+        <Button Classes="flat primary dialog_button" HorizontalAlignment="Right" Content="Done" Command="{Binding Back}"
+                IsVisible="{Binding !IsAskpass}"/>
+      </StackPanel>
+
+      <!-- GitHub CLI missing -->
+      <StackPanel x:Name="GitHubMissingPage" Spacing="14" IsVisible="{Binding IsGitHubMissingPage}">
+        <TextBlock TextWrapping="Wrap" Text="Sign in with GitHub uses the GitHub CLI (gh), which is not installed on this computer."/>
+        <TextBlock Classes="muted" TextWrapping="Wrap" Text="Install it, then choose Try again. It handles the browser sign-in and keeps your token in the system keyring."/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Back" Command="{Binding Back}"/>
+          <Button Classes="flat dialog_button" Content="How to install" Command="{Binding OpenGitHubCliInstallPage}"/>
+          <Button Classes="flat primary dialog_button" Content="Try again" Command="{Binding SignInWithGitHubAsync}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- 4. Bitbucket: token from the browser -->
+      <StackPanel x:Name="BitbucketPage" Spacing="14" IsVisible="{Binding IsBitbucketPage}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Border Classes="step_number"><TextBlock Text="1"/></Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock TextWrapping="Wrap" Text="Create an API token in your browser. Choose the Bitbucket app with the repository read and write scopes."/>
+            <Button Classes="flat dialog_button" HorizontalAlignment="Left" Command="{Binding OpenBitbucketTokenPage}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Width="12" Height="12" Data="{StaticResource Icons.Link}"/>
+                <TextBlock Text="Open the token page"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" IsVisible="{Binding IsAskpass}">
+          <Border Classes="step_number"><TextBlock Text="2"/></Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock Text="Paste the token here"/>
+            <TextBox x:Name="BitbucketTokenBox" Classes="field" PasswordChar="•" Text="{Binding BitbucketToken, Mode=TwoWay}" Watermark="API token"/>
+          </StackPanel>
+        </Grid>
+        <TextBlock Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !IsAskpass}"
+                   Text="Bitbucket asks for this token the first time you push or pull. GitGator will show this window then."/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Back" Command="{Binding Back}"/>
+          <Button x:Name="BitbucketContinue" Classes="flat primary dialog_button" Content="Continue" Command="{Binding SubmitBitbucket}"
+                  IsVisible="{Binding IsAskpass}" IsEnabled="{Binding BitbucketToken, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- 5. Username and token -->
+      <StackPanel x:Name="ManualPage" Spacing="12" IsVisible="{Binding IsManualPage}">
+        <StackPanel Spacing="6" IsVisible="{Binding AsksForUsername}">
+          <TextBlock Classes="muted" Text="Username"/>
+          <TextBox x:Name="UsernameBox" Classes="field" Text="{Binding Username, Mode=TwoWay}"/>
+        </StackPanel>
+        <StackPanel Spacing="6">
+          <TextBlock Classes="muted" Text="Password or access token"/>
+          <TextBox x:Name="SecretBox" Classes="field" PasswordChar="•" Text="{Binding Secret, Mode=TwoWay}"
+                   RevealPassword="{Binding #RevealSecret.IsChecked, Mode=OneWay}">
+            <TextBox.InnerRightContent>
+              <ToggleButton x:Name="RevealSecret" Classes="toggle_untracked" Width="26" Height="20" ToolTip.Tip="Show or hide"/>
+            </TextBox.InnerRightContent>
+          </TextBox>
+        </StackPanel>
+        <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap"
+                   Text="Most hosts no longer accept account passwords for Git. Use an access token from the host's settings."/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+          <Button Classes="flat dialog_button" Content="Back" Command="{Binding Back}"/>
+          <Button x:Name="ManualContinue" Classes="flat primary dialog_button" Content="Continue" Command="{Binding SubmitManual}" HotKey="Enter"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- 6. SSH key steps -->
+      <StackPanel x:Name="SshPage" Spacing="14" IsVisible="{Binding IsSshPage}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Border Classes="step_number"><TextBlock Text="1"/></Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock TextWrapping="Wrap" Text="Create a key, or pick one you already have, and copy its public key."/>
+            <Button Classes="flat dialog_button" HorizontalAlignment="Left" Content="SSH keys…" Click="OnOpenSshKeys"/>
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" IsVisible="{Binding HasHostSshSettings}">
+          <Border Classes="step_number"><TextBlock Text="2"/></Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock TextWrapping="Wrap" Text="Paste the public key into your account's SSH settings."/>
+            <Button Classes="flat dialog_button" HorizontalAlignment="Left" Command="{Binding OpenHostSshSettings}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Path Width="12" Height="12" Data="{StaticResource Icons.Link}"/>
+                <TextBlock Text="Open SSH settings"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Border Classes="step_number"><TextBlock Text="3"/></Border>
+          <StackPanel Grid.Column="1" Spacing="8">
+            <TextBlock TextWrapping="Wrap">
+              <Run Text="Switch this repository to SSH, so Git connects to"/>
+              <Run Text="{Binding HostName}"/>
+              <Run Text="with your key."/>
+            </TextBlock>
+            <Button x:Name="SwitchToSshButton" Classes="flat dialog_button" HorizontalAlignment="Left" Content="Switch to SSH" Command="{Binding SwitchRemotesToSshAsync}"/>
+            <TextBlock Classes="muted" FontSize="12" TextWrapping="Wrap" Text="{Binding SshStatus}"
+                       IsVisible="{Binding SshStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          </StackPanel>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Back" Command="{Binding Back}"/>
+          <Button Classes="flat primary dialog_button" Content="Close" Command="{Binding Close}"/>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Something went wrong -->
+      <StackPanel x:Name="ErrorPage" Spacing="14" IsVisible="{Binding IsErrorPage}">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+          <Path Width="20" Height="20" VerticalAlignment="Top" Data="{StaticResource Icons.Error}" Fill="{DynamicResource Brush.Danger}"/>
+          <TextBlock Grid.Column="1" TextWrapping="Wrap" Text="{Binding ErrorMessage}"/>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+          <Button Classes="flat dialog_button" Content="Back" Command="{Binding Back}"/>
+          <Button Classes="flat primary dialog_button" Content="Try again" Command="{Binding SignInWithGitHubAsync}"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</v:ChromelessWindow>

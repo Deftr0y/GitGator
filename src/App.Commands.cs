@@ -102,6 +102,15 @@ namespace SourceGit
                 Native.MacOSUtilities.ShowAllApplications();
         });
 
+        public static readonly Command OpenAccountsCommand = new Command(async _ =>
+        {
+            if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
+            {
+                var dialog = new Views.ConnectAccount(new ViewModels.ConnectAccount(null));
+                await dialog.ShowDialog(owner);
+            }
+        });
+
         public static readonly Command OpenSSHKeyHelperCommand = new Command(async _ =>
         {
             if (Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { } owner })
